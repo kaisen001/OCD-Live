@@ -53,7 +53,7 @@ export function SiteFooter() {
       </div>
 
       <div className="container-shell flex flex-col gap-2 py-5 text-xs text-white/35 sm:flex-row sm:items-center sm:justify-between">
-        <p>© {new Date().getFullYear()} OCD Live</p>
+        <p>© 2026 OCD Live</p>
         <p>House of Challenge · Bovann Shop</p>
       </div>
     </footer>
