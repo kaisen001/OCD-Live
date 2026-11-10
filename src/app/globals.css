@@ -2,17 +2,18 @@
 
 /*
   Identité OCD Live
-  - Une couleur principale : le rouge piment.
+  - Une couleur principale : l'orange du logo OCD.
   - Un accent : le jaune maïs.
-  - Le reste : encre et papier chaud.
+  - Le reste : l'encre du logo et un papier chaud.
 */
 :root {
-  --main: #c63d17;
-  --main-deep: #a02f10;
-  --accent: #f5b81f;
-  --ink: #1c120d;
-  --ink-soft: #4a3a30;
-  --muted: #6e594a;
+  --main: #f65f00;
+  /* Orange foncé : pour le texte orange sur fond clair, lisible. */
+  --main-deep: #b94500;
+  --accent: #ffc531;
+  --ink: #071019;
+  --ink-soft: #3b3a3a;
+  --muted: #6b5d52;
   --paper: #fff7e8;
   --paper-2: #f7ead2;
   --line: #e6d4b4;
@@ -198,12 +199,12 @@ html[data-lang="en"] .l-fr {
 
 .btn-primary {
   background: var(--main);
-  color: var(--white);
+  color: var(--ink);
   box-shadow: 4px 4px 0 var(--ink);
 }
 
 .btn-primary:not(:disabled):hover {
-  background: var(--main-deep);
+  background: #ff7a1f;
 }
 
 .btn-primary:not(:disabled):active {
@@ -287,7 +288,7 @@ html[data-lang="en"] .l-fr {
 
 .tag-main {
   background: var(--main);
-  color: var(--white);
+  color: var(--ink);
 }
 
 /* ---------- Choix (réservation) ---------- */
@@ -380,7 +381,7 @@ html[data-lang="en"] .l-fr {
 
 .day[aria-pressed="true"] {
   background: var(--main);
-  color: var(--white);
+  color: var(--ink);
   border-color: var(--ink);
   box-shadow: 3px 3px 0 var(--ink);
 }
@@ -471,6 +472,7 @@ html[data-lang="en"] .l-fr {
   line-height: 0.8;
   letter-spacing: -0.05em;
   color: var(--main);
+  -webkit-text-stroke: 2px var(--ink);
 }
 
 .tilt-l {

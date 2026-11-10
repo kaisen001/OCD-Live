@@ -7,23 +7,25 @@ import { formatDate } from "./slots";
 import type { Lang, PublicReservation } from "./types";
 
 const C = {
-  main: "#c63d17",
-  accent: "#f5b81f",
-  ink: "#1c120d",
+  main: "#f65f00",
+  accent: "#ffc531",
+  ink: "#071019",
   paper: "#fff7e8",
 };
 
-let assets: Promise<{ display: Buffer; text: Buffer; motif: string }> | null = null;
+let assets: Promise<{ display: Buffer; text: Buffer; motif: string; logo: string }> | null = null;
 
 function loadAssets() {
   assets ??= Promise.all([
     readFile(join(process.cwd(), "src/fonts/bricolage-800.woff")),
     readFile(join(process.cwd(), "src/fonts/instrument-600.woff")),
     readFile(join(process.cwd(), "public/motif.svg")),
-  ]).then(([display, text, motif]) => ({
+    readFile(join(process.cwd(), "src/assets/logo-blanc.png")),
+  ]).then(([display, text, motif, logo]) => ({
     display,
     text,
     motif: `data:image/svg+xml;base64,${motif.toString("base64")}`,
+    logo: `data:image/png;base64,${logo.toString("base64")}`,
   }));
   return assets;
 }
@@ -41,24 +43,9 @@ function Band({ motif, width, height }: { motif: string; width: number; height: 
   );
 }
 
-function Wordmark({ size }: { size: number }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", fontFamily: "Display", fontSize: size }}>
-      <div
-        style={{
-          display: "flex",
-          background: C.main,
-          color: C.paper,
-          border: `4px solid ${C.paper}`,
-          borderRadius: 8,
-          padding: `${size * 0.12}px ${size * 0.28}px`,
-        }}
-      >
-        OCD
-      </div>
-      <div style={{ display: "flex", marginLeft: size * 0.3 }}>Live</div>
-    </div>
-  );
+function Wordmark({ logo, width }: { logo: string; width: number }) {
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src={logo} width={width} height={Math.round((width * 79) / 410)} alt="" />;
 }
 
 /** Taille du nom : un nom long doit rester sur l'affiche. */
@@ -83,7 +70,7 @@ async function render(node: React.ReactElement, width: number, height: number) {
 
 /** Affiche verticale 1080 × 1350 : statut WhatsApp, TikTok, Instagram. */
 export async function renderPoster(r: PublicReservation, lang: Lang, sample = false) {
-  const { motif } = await loadAssets();
+  const { motif, logo } = await loadAssets();
   const W = 1080;
   const H = 1350;
   const date = formatDate(r.date, lang).toUpperCase();
@@ -170,7 +157,7 @@ export async function renderPoster(r: PublicReservation, lang: Lang, sample = fa
             {date}
           </div>
           <div style={{ display: "flex", alignItems: "baseline", marginTop: 6 }}>
-            <div style={{ display: "flex", fontFamily: "Display", fontSize: 112, color: C.main, letterSpacing: -3 }}>
+            <div style={{ display: "flex", fontFamily: "Display", fontSize: 112, color: "#d85200", letterSpacing: -3 }}>
               {r.slotStart.replace(":", " h ")}
             </div>
             <div style={{ display: "flex", marginLeft: 22, fontSize: 34 }}>
@@ -193,7 +180,7 @@ export async function renderPoster(r: PublicReservation, lang: Lang, sample = fa
           padding: "30px 70px",
         }}
       >
-        <Wordmark size={46} />
+        <Wordmark logo={logo} width={330} />
         <div style={{ display: "flex", fontFamily: "Display", fontSize: 36, color: C.accent }}>
           {SITE.tagline}
         </div>
@@ -207,7 +194,7 @@ export async function renderPoster(r: PublicReservation, lang: Lang, sample = fa
 
 /** Carte de membre 1080 × 680. */
 export async function renderCard(r: PublicReservation, lang: Lang, sample = false) {
-  const { motif } = await loadAssets();
+  const { motif, logo } = await loadAssets();
   const W = 1080;
   const H = 680;
   const number = String(r.memberNo).padStart(4, "0");
@@ -225,7 +212,7 @@ export async function renderCard(r: PublicReservation, lang: Lang, sample = fals
     >
       <div style={{ display: "flex", flexDirection: "column", flex: 1, padding: "54px 60px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Wordmark size={44} />
+          <Wordmark logo={logo} width={300} />
           <div style={{ display: "flex", fontSize: 28, letterSpacing: 4, color: C.accent }}>
             {sample
               ? lang === "fr"

@@ -47,12 +47,21 @@ Copier `.env.example` vers `.env.local` et remplir.
 - Les prix et les packs : `src/lib/packages.ts`
 - Les horaires, la date d'ouverture, les jours fermés : `src/lib/slots.ts`
 - Le compte TikTok, la ville du studio : `src/lib/site.ts`
-- Le logo : `src/components/logo.tsx` (emplacement prévu pour le logo officiel)
+- Le logo : fichiers dans `public/brand/` et `src/assets/` (copies de petite taille, à remplacer par les originaux du compte @OCD)
 - Les couleurs : en haut de `src/app/globals.css`
 
 ## Emplacements à compléter avec du vrai contenu
 
 - Les avis des vendeurs, sur l'accueil (après les premiers lives).
 - L'histoire de Bovann, sur `/histoire` (son texte, ses photos).
+
+## Crédits photos
+
+Photos de Lomé sous licence CC BY-SA 4.0 (Wikimedia Commons). Le crédit affiché sous chaque photo est obligatoire.
+
+- « Création, petit sac en pagne Wax » et « Création, Objets d'art, à Lomé », par Step may
+- « Marché de Hédzranawoé à Lomé (Togo) 06 », par Akouete
+
+Les photos ont été recadrées et allégées.
 
 Les polices Bricolage Grotesque et Instrument Sans sont sous licence SIL Open Font License.

@@ -56,7 +56,7 @@ export function Agenda() {
         >
           <p className="font-bold">
             <span className="inline-block first-letter:uppercase">{formatDate(item.date, lang)}</span>
-            <span className="display ml-2 text-[var(--main)]">{item.slotStart}</span>
+            <span className="display ml-2 text-[var(--main-deep)]">{item.slotStart}</span>
           </p>
           <p>
             <span className="display text-xl">{item.businessName}</span>

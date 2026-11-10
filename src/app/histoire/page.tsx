@@ -15,14 +15,14 @@ export default function HistoirePage() {
           <T
             fr={
               <>
-                Les <span className="text-[var(--main)]">O</span>pportunités{" "}
-                <span className="text-[var(--main)]">C</span>&apos;est{" "}
-                <span className="text-[var(--main)]">D</span>ehors.
+                Les <span className="text-[var(--main-deep)]">O</span>pportunités{" "}
+                <span className="text-[var(--main-deep)]">C</span>&apos;est{" "}
+                <span className="text-[var(--main-deep)]">D</span>ehors.
               </>
             }
             en={
               <>
-                Opportunities are <span className="text-[var(--main)]">out there.</span>
+                Opportunities are <span className="text-[var(--main-deep)]">out there.</span>
               </>
             }
           />

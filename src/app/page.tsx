@@ -4,6 +4,37 @@ import { Price } from "@/components/price";
 import { T } from "@/components/t";
 import { PACKAGES, pricePerLive } from "@/lib/packages";
 
+/** Photos sous licence libre (Wikimedia Commons). Crédit obligatoire : ne pas retirer. */
+const PHOTOS = [
+  {
+    src: "/photos/sacs-wax.webp",
+    w: 440,
+    h: 550,
+    fr: "Sacs en pagne wax, Lomé",
+    en: "Wax print bags, Lomé",
+    author: "Step may",
+    page: "https://commons.wikimedia.org/wiki/File:Cr%C3%A9ation,_petit_sac_en_pagne_Wax.jpg",
+  },
+  {
+    src: "/photos/marche-hedzranawoe.webp",
+    w: 440,
+    h: 440,
+    fr: "Marché de Hédzranawoé, Lomé",
+    en: "Hédzranawoé market, Lomé",
+    author: "Akouete",
+    page: "https://commons.wikimedia.org/wiki/File:March%C3%A9_de_H%C3%A9dzranawo%C3%A9_%C3%A0_Lom%C3%A9_(Togo)_06.jpg",
+  },
+  {
+    src: "/photos/artisanat-lome.webp",
+    w: 440,
+    h: 550,
+    fr: "Artisanat, Lomé",
+    en: "Crafts, Lomé",
+    author: "Step may",
+    page: "https://commons.wikimedia.org/wiki/File:Cr%C3%A9ation,_Objets_d%27art,_%C3%A0_Lom%C3%A9.jpg",
+  },
+];
+
 const STEPS = [
   {
     fr: ["Studio ou à distance", "Tu viens au studio à Lomé, ou tu restes chez toi."],
@@ -41,13 +72,13 @@ export default function Home() {
                 fr={
                   <>
                     Pas d&apos;abonnés&nbsp;? Vends sur un compte qui a déjà{" "}
-                    <span className="text-[var(--main)]">le public.</span>
+                    <span className="text-[var(--main-deep)]">le public.</span>
                   </>
                 }
                 en={
                   <>
                     No followers? Sell on an account that already has{" "}
-                    <span className="text-[var(--main)]">the crowd.</span>
+                    <span className="text-[var(--main-deep)]">the crowd.</span>
                   </>
                 }
               />
@@ -93,6 +124,51 @@ export default function Home() {
         <div className="band band-tall" aria-hidden />
       </section>
 
+      {/* ---------- Ce qui se vend ---------- */}
+      <section className="shell pt-14 md:pt-24">
+        <div className="grid gap-8 md:grid-cols-[0.8fr_1.2fr] md:items-end">
+          <div>
+            <p className="kicker">
+              <T fr="Pour qui" en="Who it's for" />
+            </p>
+            <h2 className="display t-2 mt-4">
+              <T fr="Tu vends déjà. Il te manque le public." en="You already sell. You just need the crowd." />
+            </h2>
+            <p className="lead mt-4">
+              <T
+                fr="Mode, beauté, alimentation, téléphones, artisanat, services. Si tu as un produit et un prix, tu peux passer en live."
+                en="Fashion, beauty, food, phones, crafts, services. If you have a product and a price, you can go live."
+              />
+            </p>
+          </div>
+          <div className="grid grid-cols-3 items-end gap-3 sm:gap-4">
+            {PHOTOS.map((photo, index) => (
+              <figure key={photo.src} className={index === 1 ? "mb-6 sm:mb-10" : ""}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={photo.src}
+                  alt={photo.fr}
+                  width={photo.w}
+                  height={photo.h}
+                  loading="lazy"
+                  className={`w-full rounded-md border-2 border-[var(--ink)] object-cover ${
+                    index === 0 ? "tilt-l" : index === 2 ? "tilt-r" : ""
+                  }`}
+                />
+                <figcaption className="mt-2 text-[0.7rem] leading-tight text-[var(--muted)]">
+                  <T fr={photo.fr} en={photo.en} />
+                  <br />
+                  <a href={photo.page} target="_blank" rel="noopener noreferrer" className="underline">
+                    {photo.author}
+                  </a>
+                  , CC BY-SA 4.0
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ---------- Les quatre étapes ---------- */}
       <section className="shell sec">
         <div className="max-w-2xl">
@@ -121,7 +197,7 @@ export default function Home() {
       {/* ---------- Deux façons de passer en live ---------- */}
       <section className="shell pb-16 md:pb-24">
         <div className="grid gap-5 md:grid-cols-[1.3fr_1fr]">
-          <article className="marks rounded-lg bg-[var(--main)] p-7 text-[var(--white)] md:p-10">
+          <article className="marks rounded-lg bg-[var(--main)] p-7 text-[var(--ink)] md:p-10">
             <p className="kicker on-main">
               <T fr="Au studio · Lomé, Togo" en="At the studio · Lomé, Togo" />
             </p>
@@ -194,7 +270,7 @@ export default function Home() {
                 <div className="text-right md:order-3">
                   <Price amount={pack.priceFcfa} className="display block text-2xl md:text-[1.9rem]" />
                   {pack.lives > 1 ? (
-                    <p className="text-sm font-bold text-[var(--main)]">
+                    <p className="text-sm font-bold text-[var(--main-deep)]">
                       <T fr="soit " en="that's " />
                       <Price amount={pricePerLive(pack)} approx={false} />
                       <T fr=" le live" en=" per live" />

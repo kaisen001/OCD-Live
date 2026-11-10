@@ -9,7 +9,7 @@ export function SiteFooter() {
       <div className="band band-tall" aria-hidden />
       <div className="shell grid gap-10 py-12 md:grid-cols-[1.4fr_1fr_1fr]">
         <div>
-          <Logo onDark />
+          <Logo onDark className="h-10 w-auto" />
           <p className="display mt-5 text-2xl">{SITE.tagline}.</p>
           <p className="mt-3 max-w-xs text-[0.95rem] opacity-75">
             <T

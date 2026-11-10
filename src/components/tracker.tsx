@@ -362,7 +362,7 @@ export function Tracker() {
           <ol className="mt-6">
             {PREP[r.mode].map((line, index) => (
               <li key={line.fr} className="flex gap-4 border-t-2 border-[var(--line)] py-4">
-                <span className="display text-2xl text-[var(--main)]">{index + 1}</span>
+                <span className="display text-2xl text-[var(--main-deep)]">{index + 1}</span>
                 <span className="font-semibold">
                   <T fr={line.fr} en={line.en} />
                 </span>

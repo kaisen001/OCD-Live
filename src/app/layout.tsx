@@ -28,7 +28,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#c63d17",
+  themeColor: "#f65f00",
 };
 
 /** Choisit la langue avant le premier affichage : pas de clignotement. */

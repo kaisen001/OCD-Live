@@ -1,29 +1,17 @@
 /**
- * EMPLACEMENT DU LOGO OFFICIEL.
- * Bovann a dit que le logo est disponible sur le compte @OCD.
- * Dès qu'on l'a : déposer le fichier dans public/ et remplacer ce mot-symbole.
+ * Logo OCD Live.
+ * Fichiers dans public/brand/. Ce sont des copies de petite taille :
+ * à remplacer par les originaux du compte @OCD dès qu'on les a (mêmes noms de fichiers).
  */
-export function Logo({ onDark = false }: { onDark?: boolean }) {
+export function Logo({ onDark = false, className = "h-8 w-auto" }: { onDark?: boolean; className?: string }) {
   return (
-    <span className="inline-flex items-center gap-2 leading-none">
-      <span
-        className="display grid h-10 place-items-center rounded-[5px] px-2 text-[1.15rem]"
-        style={{
-          background: "var(--main)",
-          color: "var(--white)",
-          border: `2px solid ${onDark ? "var(--paper)" : "var(--ink)"}`,
-        }}
-      >
-        OCD
-      </span>
-      <span className="display text-[1.15rem]">
-        Live
-        <span
-          aria-hidden
-          className="ml-1 inline-block h-2.5 w-2.5 rounded-full align-middle"
-          style={{ background: "var(--accent)", border: "2px solid currentColor" }}
-        />
-      </span>
-    </span>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={onDark ? "/brand/ocd-live-blanc.webp" : "/brand/ocd-live.webp"}
+      alt="OCD Live"
+      width={410}
+      height={79}
+      className={className}
+    />
   );
 }
