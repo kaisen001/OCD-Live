@@ -13,19 +13,27 @@ const C = {
   paper: "#fff7e8",
 };
 
-let assets: Promise<{ display: Buffer; text: Buffer; motif: string; logo: string }> | null = null;
+let assets: Promise<{
+  display: Buffer;
+  text: Buffer;
+  motif: string;
+  logo: string;
+  logoDark: string;
+}> | null = null;
 
 function loadAssets() {
   assets ??= Promise.all([
-    readFile(join(process.cwd(), "src/fonts/bricolage-800.woff")),
-    readFile(join(process.cwd(), "src/fonts/instrument-600.woff")),
+    readFile(join(process.cwd(), "src/fonts/anton.woff")),
+    readFile(join(process.cwd(), "src/fonts/figtree-600.woff")),
     readFile(join(process.cwd(), "public/motif.svg")),
     readFile(join(process.cwd(), "src/assets/logo-blanc.png")),
-  ]).then(([display, text, motif, logo]) => ({
+    readFile(join(process.cwd(), "src/assets/logo.png")),
+  ]).then(([display, text, motif, logo, logoDark]) => ({
     display,
     text,
     motif: `data:image/svg+xml;base64,${motif.toString("base64")}`,
     logo: `data:image/png;base64,${logo.toString("base64")}`,
+    logoDark: `data:image/png;base64,${logoDark.toString("base64")}`,
   }));
   return assets;
 }
@@ -61,7 +69,7 @@ async function render(node: React.ReactElement, width: number, height: number) {
     width,
     height,
     fonts: [
-      { name: "Display", data: display, weight: 800, style: "normal" },
+      { name: "Display", data: display, weight: 400, style: "normal" },
       { name: "Text", data: text, weight: 600, style: "normal" },
     ],
     headers: { "Cache-Control": "public, max-age=300" },
@@ -74,6 +82,7 @@ export async function renderPoster(r: PublicReservation, lang: Lang, sample = fa
   const W = 1080;
   const H = 1350;
   const date = formatDate(r.date, lang).toUpperCase();
+  const name = r.businessName.toUpperCase();
 
   return render(
     <div
@@ -82,110 +91,78 @@ export async function renderPoster(r: PublicReservation, lang: Lang, sample = fa
         flexDirection: "column",
         width: W,
         height: H,
-        background: C.main,
+        background: C.ink,
         color: C.paper,
         fontFamily: "Text",
       }}
     >
-      <Band motif={motif} width={W} height={90} />
-      <div style={{ display: "flex", flexDirection: "column", flex: 1, padding: "60px 70px 0" }}>
+      <div style={{ display: "flex", flexDirection: "column", flex: 1, padding: "64px 70px 0" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <Wordmark logo={logo} width={330} />
           <div
             style={{
               display: "flex",
               alignItems: "center",
-              background: C.accent,
+              background: C.main,
               color: C.ink,
               fontFamily: "Display",
-              fontSize: 44,
-              padding: "12px 26px",
-              borderRadius: 8,
-              border: `5px solid ${C.ink}`,
-              transform: "rotate(-3deg)",
+              fontSize: 40,
+              letterSpacing: 3,
+              padding: "10px 30px",
+              borderRadius: 60,
             }}
           >
-            <div
-              style={{
-                display: "flex",
-                width: 24,
-                height: 24,
-                borderRadius: 12,
-                background: C.main,
-                marginRight: 16,
-              }}
-            />
-            {lang === "fr" ? "EN LIVE" : "LIVE"}
+            {sample ? (lang === "fr" ? "EXEMPLE" : "SAMPLE") : lang === "fr" ? "EN LIVE" : "LIVE"}
           </div>
-          {sample ? (
-            <div style={{ display: "flex", fontSize: 30, opacity: 0.85 }}>
-              {lang === "fr" ? "Exemple d'affiche" : "Sample poster"}
-            </div>
-          ) : null}
         </div>
 
+        <div style={{ display: "flex", marginTop: 90, fontSize: 36, letterSpacing: 5, color: C.main }}>
+          {businessLabel(r.businessType)[lang].toUpperCase()}
+        </div>
         <div
           style={{
             display: "flex",
-            marginTop: 70,
+            marginTop: 14,
             fontFamily: "Display",
-            fontSize: nameSize(r.businessName, 150, 96),
-            lineHeight: 0.95,
-            letterSpacing: -4,
+            fontSize: nameSize(name, 210, 120),
+            lineHeight: 0.98,
           }}
         >
-          {r.businessName}
-        </div>
-        <div style={{ display: "flex", marginTop: 26, fontSize: 40, opacity: 0.92 }}>
-          {businessLabel(r.businessType)[lang]}
+          {name}
         </div>
 
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            marginTop: "auto",
-            marginBottom: 54,
-            background: C.paper,
-            color: C.ink,
-            border: `6px solid ${C.ink}`,
-            borderRadius: 12,
-            padding: "34px 40px",
-            boxShadow: `12px 12px 0 ${C.ink}`,
-          }}
-        >
-          <div style={{ display: "flex", fontFamily: "Display", fontSize: 58, letterSpacing: -1.5 }}>
-            {date}
-          </div>
-          <div style={{ display: "flex", alignItems: "baseline", marginTop: 6 }}>
-            <div style={{ display: "flex", fontFamily: "Display", fontSize: 112, color: "#d85200", letterSpacing: -3 }}>
-              {r.slotStart.replace(":", " h ")}
+        <div style={{ display: "flex", flexDirection: "column", marginTop: "auto", marginBottom: 56 }}>
+          <div style={{ display: "flex", fontSize: 44, letterSpacing: 2 }}>{date}</div>
+          <div style={{ display: "flex", alignItems: "flex-end", marginTop: 4 }}>
+            <div style={{ display: "flex", fontFamily: "Display", fontSize: 250, lineHeight: 0.95, color: C.main }}>
+              {r.slotStart.replace(":", "H")}
             </div>
-            <div style={{ display: "flex", marginLeft: 22, fontSize: 34 }}>
+            <div style={{ display: "flex", marginLeft: 28, marginBottom: 34, fontSize: 32, opacity: 0.75 }}>
               {lang === "fr" ? "heure de Lomé (GMT)" : "Lomé time (GMT)"}
             </div>
-          </div>
-          <div style={{ display: "flex", marginTop: 10, fontSize: 38 }}>
-            {lang === "fr" ? "Sur TikTok :" : "On TikTok:"}&nbsp;
-            <span style={{ fontFamily: "Display" }}>{SITE.tiktokAccount}</span>
           </div>
         </div>
       </div>
 
+      <Band motif={motif} width={W} height={44} />
       <div
         style={{
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          background: C.ink,
+          background: C.main,
+          color: C.ink,
           padding: "30px 70px",
         }}
       >
-        <Wordmark logo={logo} width={330} />
-        <div style={{ display: "flex", fontFamily: "Display", fontSize: 36, color: C.accent }}>
-          {SITE.tagline}
+        <div style={{ display: "flex", alignItems: "center", fontSize: 32 }}>
+          {lang === "fr" ? "Sur TikTok" : "On TikTok"}&nbsp;
+          <span style={{ fontFamily: "Display", fontSize: 40, marginLeft: 12 }}>{SITE.tiktokAccount}</span>
+        </div>
+        <div style={{ display: "flex", fontFamily: "Display", fontSize: 24, letterSpacing: 1 }}>
+          {SITE.tagline.toUpperCase()}
         </div>
       </div>
-      <Band motif={motif} width={W} height={60} />
     </div>,
     W,
     H,
@@ -194,7 +171,7 @@ export async function renderPoster(r: PublicReservation, lang: Lang, sample = fa
 
 /** Carte de membre 1080 × 680. */
 export async function renderCard(r: PublicReservation, lang: Lang, sample = false) {
-  const { motif, logo } = await loadAssets();
+  const { motif, logoDark } = await loadAssets();
   const W = 1080;
   const H = 680;
   const number = String(r.memberNo).padStart(4, "0");
@@ -205,15 +182,21 @@ export async function renderCard(r: PublicReservation, lang: Lang, sample = fals
         display: "flex",
         width: W,
         height: H,
-        background: C.ink,
-        color: C.paper,
+        background: C.paper,
+        color: C.ink,
         fontFamily: "Text",
       }}
     >
-      <div style={{ display: "flex", flexDirection: "column", flex: 1, padding: "54px 60px" }}>
+      <div style={{ display: "flex", flexDirection: "column", width: 56, height: H, overflow: "hidden" }}>
+        {Array.from({ length: Math.ceil(H / 28) }, (_, i) => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img key={i} src={motif} width={56} height={28} alt="" />
+        ))}
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", flex: 1, padding: "50px 60px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Wordmark logo={logo} width={300} />
-          <div style={{ display: "flex", fontSize: 28, letterSpacing: 4, color: C.accent }}>
+          <Wordmark logo={logoDark} width={290} />
+          <div style={{ display: "flex", fontSize: 26, letterSpacing: 5, opacity: 0.6 }}>
             {sample
               ? lang === "fr"
                 ? "EXEMPLE"
@@ -224,18 +207,16 @@ export async function renderCard(r: PublicReservation, lang: Lang, sample = fals
           </div>
         </div>
 
-        <div style={{ display: "flex", alignItems: "baseline", marginTop: 56 }}>
-          <div style={{ display: "flex", fontFamily: "Display", fontSize: 56, color: C.accent }}>
-            OCD N°
-          </div>
+        <div style={{ display: "flex", alignItems: "flex-end", marginTop: 50 }}>
+          <div style={{ display: "flex", fontFamily: "Display", fontSize: 70, marginBottom: 22 }}>OCD N°</div>
           <div
             style={{
               display: "flex",
-              marginLeft: 22,
+              marginLeft: 24,
               fontFamily: "Display",
-              fontSize: 190,
-              lineHeight: 0.9,
-              letterSpacing: -6,
+              fontSize: 250,
+              lineHeight: 0.95,
+              color: C.main,
             }}
           >
             {number}
@@ -243,29 +224,13 @@ export async function renderCard(r: PublicReservation, lang: Lang, sample = fals
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", marginTop: "auto" }}>
-          <div
-            style={{
-              display: "flex",
-              fontFamily: "Display",
-              fontSize: nameSize(r.contactName, 62, 46),
-              letterSpacing: -1.5,
-            }}
-          >
-            {r.contactName}
+          <div style={{ display: "flex", fontFamily: "Display", fontSize: nameSize(r.contactName, 64, 48) }}>
+            {r.contactName.toUpperCase()}
           </div>
-          <div style={{ display: "flex", marginTop: 6, fontSize: 34, opacity: 0.85 }}>
+          <div style={{ display: "flex", marginTop: 6, fontSize: 32, opacity: 0.75 }}>
             {r.businessName} · {r.city}
           </div>
-          <div style={{ display: "flex", marginTop: 22, fontFamily: "Display", fontSize: 32, color: C.accent }}>
-            {SITE.tagline}
-          </div>
         </div>
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", width: 120, height: H, overflow: "hidden" }}>
-        {Array.from({ length: Math.ceil(H / 60) }, (_, i) => (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img key={i} src={motif} width={120} height={60} alt="" />
-        ))}
       </div>
     </div>,
     W,

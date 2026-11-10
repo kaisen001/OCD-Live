@@ -181,7 +181,7 @@ export function AdminPanel() {
           <button
             key={item.id}
             type="button"
-            className="min-h-11 rounded-md px-3.5 text-sm font-bold"
+            className="min-h-11 rounded-full px-4 text-sm font-bold"
             aria-pressed={filter === item.id}
             style={{
               background: filter === item.id ? "var(--ink)" : "var(--white)",
@@ -260,7 +260,7 @@ export function AdminPanel() {
 
             <div className="flex flex-wrap gap-2">
               <a
-                className="btn btn-accent btn-small !shadow-[3px_3px_0_var(--ink)]"
+                className="btn btn-accent btn-small"
                 href={whatsappLink(item)}
                 target="_blank"
                 rel="noopener noreferrer"

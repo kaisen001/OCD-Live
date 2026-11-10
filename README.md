@@ -64,4 +64,4 @@ Photos de Lomé sous licence CC BY-SA 4.0 (Wikimedia Commons). Le crédit affich
 
 Les photos ont été recadrées et allégées.
 
-Les polices Bricolage Grotesque et Instrument Sans sont sous licence SIL Open Font License.
+Les polices Anton et Figtree sont sous licence SIL Open Font License.

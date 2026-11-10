@@ -5,16 +5,16 @@ import { SiteHeader } from "@/components/site-header";
 import "./globals.css";
 
 const display = localFont({
-  src: "../fonts/bricolage.woff2",
+  src: "../fonts/anton.woff2",
   variable: "--font-display",
-  weight: "200 800",
+  weight: "400",
   display: "swap",
 });
 
 const text = localFont({
-  src: "../fonts/instrument.woff2",
+  src: "../fonts/figtree.woff2",
   variable: "--font-text",
-  weight: "400 700",
+  weight: "300 900",
   display: "swap",
 });
 
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f65f00",
+  themeColor: "#071019",
 };
 
 /** Choisit la langue avant le premier affichage : pas de clignotement. */

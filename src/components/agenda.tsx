@@ -52,14 +52,14 @@ export function Agenda() {
       {items.map((item) => (
         <li
           key={`${item.date}-${item.slotStart}`}
-          className="grid gap-1 border-t-2 border-[var(--ink)] py-4 last:border-b-2 md:grid-cols-[14rem_1fr_auto] md:items-baseline md:gap-6"
+          className="grid gap-1 border-t border-[var(--line)] py-5 last:border-b md:grid-cols-[14rem_1fr_auto] md:items-baseline md:gap-6"
         >
           <p className="font-bold">
             <span className="inline-block first-letter:uppercase">{formatDate(item.date, lang)}</span>
             <span className="display ml-2 text-[var(--main-deep)]">{item.slotStart}</span>
           </p>
           <p>
-            <span className="display text-xl">{item.businessName}</span>
+            <span className="display text-2xl">{item.businessName}</span>
             <span className="ml-2 text-[var(--muted)]">
               {businessLabel(item.businessType)[lang]} · {item.city}
             </span>

@@ -220,7 +220,7 @@ export function BookingWizard() {
             <div className="flex items-center justify-between gap-2">
               <button
                 type="button"
-                className="btn btn-plain btn-small !min-w-12 !px-0"
+                className="btn btn-plain btn-small !min-w-11 !border-[var(--line)] !px-0"
                 disabled={monthIndex === 0}
                 onClick={() => setMonthIndex((i) => i - 1)}
                 aria-label={lang === "fr" ? "Mois précédent" : "Previous month"}
@@ -230,7 +230,7 @@ export function BookingWizard() {
               <p className="display text-xl capitalize">{formatMonth(month.year, month.month, lang)}</p>
               <button
                 type="button"
-                className="btn btn-plain btn-small !min-w-12 !px-0"
+                className="btn btn-plain btn-small !min-w-11 !border-[var(--line)] !px-0"
                 disabled={monthIndex === months.length - 1}
                 onClick={() => setMonthIndex((i) => i + 1)}
                 aria-label={lang === "fr" ? "Mois suivant" : "Next month"}
@@ -338,7 +338,7 @@ export function BookingWizard() {
               <span className="flex flex-wrap items-baseline justify-between gap-x-4">
                 <span className="display t-3">
                   <T fr={item.name.fr} en={item.name.en} />
-                  <span className="ml-2 text-base font-bold tracking-normal">
+                  <span className="ml-2 font-[family-name:var(--font-text)] text-sm font-bold normal-case text-[var(--muted)]">
                     · {item.lives} live{item.lives > 1 ? "s" : ""}
                   </span>
                 </span>
@@ -515,7 +515,7 @@ export function BookingWizard() {
       ) : null}
 
       {/* ---------- Récapitulatif + boutons ---------- */}
-      <div className="sticky bottom-0 z-30 -mx-5 mt-8 border-t-2 border-[var(--ink)] bg-[var(--paper)] px-5 py-3 sm:static sm:mx-0 sm:border-0 sm:px-0">
+      <div className="sticky bottom-0 z-30 -mx-5 mt-8 border-t border-[var(--line)] bg-[var(--paper)] px-5 py-3 sm:static sm:mx-0 sm:border-0 sm:px-0">
         {form.mode ? (
           <p className="mb-3 text-sm font-semibold text-[var(--ink-soft)]">
             {MODE_LABELS[form.mode][lang]}

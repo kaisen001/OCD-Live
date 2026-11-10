@@ -7,7 +7,8 @@ export const metadata: Metadata = { title: "Pourquoi OCD" };
 export default function HistoirePage() {
   return (
     <>
-      <section className="shell pb-12 pt-10 md:pb-20 md:pt-20">
+      <section className="dark">
+        <div className="shell pb-14 pt-10 md:pb-24 md:pt-20">
         <p className="kicker">
           <T fr="Pourquoi OCD" en="Why OCD" />
         </p>
@@ -15,14 +16,14 @@ export default function HistoirePage() {
           <T
             fr={
               <>
-                Les <span className="text-[var(--main-deep)]">O</span>pportunités{" "}
-                <span className="text-[var(--main-deep)]">C</span>&apos;est{" "}
-                <span className="text-[var(--main-deep)]">D</span>ehors.
+                Les <span className="text-[var(--main)]">O</span>pportunités{" "}
+                <span className="text-[var(--main)]">C</span>&apos;est{" "}
+                <span className="text-[var(--main)]">D</span>ehors.
               </>
             }
             en={
               <>
-                Opportunities are <span className="text-[var(--main-deep)]">out there.</span>
+                Opportunities are <span className="text-[var(--main)]">out there.</span>
               </>
             }
           />
@@ -33,6 +34,7 @@ export default function HistoirePage() {
             en="OCD is a way of doing things: you don't sit and wait. You go out, you look, you offer."
           />
         </p>
+        </div>
       </section>
 
       <div className="band band-tall" aria-hidden />
@@ -63,7 +65,7 @@ export default function HistoirePage() {
         </div>
 
         <div className="grid content-start gap-6">
-          <figure className="marks rounded-lg bg-[var(--accent)] p-7 md:-rotate-1">
+          <figure className="rounded-[1.75rem] bg-[var(--main)] p-8 md:-rotate-1">
             <blockquote className="display t-2">
               <T fr="« Si tu as 10 abonnés, tu as 10 clients. »" en="“If you have 10 followers, you have 10 customers.”" />
             </blockquote>
@@ -77,7 +79,7 @@ export default function HistoirePage() {
 
           {/* EMPLACEMENT RÉSERVÉ : l'histoire de Bovann, racontée par lui, avec ses photos.
               On ne l'écrit pas à sa place. À remplacer dès réception du texte et des images. */}
-          <div className="rounded-lg border-2 border-dashed border-[var(--ink)] p-7">
+          <div className="rounded-[1.75rem] border-2 border-dashed border-[var(--line)] p-8">
             <p className="tag tag-ink">
               <T fr="À compléter par l'équipe" en="To be completed by the team" />
             </p>

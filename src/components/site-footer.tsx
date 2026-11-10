@@ -5,12 +5,12 @@ import { T } from "./t";
 
 export function SiteFooter() {
   return (
-    <footer className="on-dark bg-[var(--ink)] text-[var(--paper)]">
+    <footer className="dark">
       <div className="band band-tall" aria-hidden />
       <div className="shell grid gap-10 py-12 md:grid-cols-[1.4fr_1fr_1fr]">
         <div>
           <Logo onDark className="h-10 w-auto" />
-          <p className="display mt-5 text-2xl">{SITE.tagline}.</p>
+          <p className="display mt-6 text-4xl text-[var(--main)]">{SITE.tagline}.</p>
           <p className="mt-3 max-w-xs text-[0.95rem] opacity-75">
             <T
               fr={`Lives de vente sur le TikTok House of Challenge. Studio à ${SITE.studioCity}, ${SITE.studioCountry}.`}

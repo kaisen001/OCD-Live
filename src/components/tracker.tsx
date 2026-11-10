@@ -298,7 +298,7 @@ export function Tracker() {
                 alt={lang === "fr" ? "Ton affiche" : "Your poster"}
                 width={1080}
                 height={1350}
-                className="w-full rounded-md border-2 border-[var(--ink)] shadow-[6px_6px_0_var(--ink)]"
+                className="w-full rounded-2xl shadow-[0_30px_60px_-30px_rgba(7,16,25,0.6)]"
               />
               <div className="mt-5 grid gap-3">
                 <ShareImage
@@ -324,7 +324,7 @@ export function Tracker() {
                 alt={lang === "fr" ? "Ta carte de membre" : "Your member card"}
                 width={1080}
                 height={680}
-                className="w-full rounded-md border-2 border-[var(--ink)] shadow-[6px_6px_0_var(--accent)]"
+                className="w-full rounded-xl shadow-[0_20px_40px_-18px_rgba(7,16,25,0.6)]"
               />
               <div className="mt-5">
                 <ShareImage
@@ -361,8 +361,8 @@ export function Tracker() {
           </h2>
           <ol className="mt-6">
             {PREP[r.mode].map((line, index) => (
-              <li key={line.fr} className="flex gap-4 border-t-2 border-[var(--line)] py-4">
-                <span className="display text-2xl text-[var(--main-deep)]">{index + 1}</span>
+              <li key={line.fr} className="flex gap-4 border-t border-[var(--line)] py-4">
+                <span className="display text-3xl text-[var(--main-deep)]">{index + 1}</span>
                 <span className="font-semibold">
                   <T fr={line.fr} en={line.en} />
                 </span>
