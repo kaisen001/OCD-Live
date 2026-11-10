@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { businessLabel, MODE_LABELS } from "@/lib/business";
-import { formatFcfa, getPackage } from "@/lib/packages";
+import { durationLabel, formatFcfa, getPackage } from "@/lib/packages";
 import { formatDate } from "@/lib/slots";
 import type { Reservation, ReservationStatus } from "@/lib/types";
 
@@ -185,7 +185,7 @@ export function AdminPanel() {
             aria-pressed={filter === item.id}
             style={{
               background: filter === item.id ? "var(--ink)" : "var(--white)",
-              color: filter === item.id ? "var(--paper)" : "var(--ink-soft)",
+              color: filter === item.id ? "#fff" : "var(--ink-soft)",
               border: `2px solid ${filter === item.id ? "var(--ink)" : "var(--line)"}`,
             }}
             onClick={() => setFilter(item.id)}
@@ -244,9 +244,10 @@ export function AdminPanel() {
               </p>
               <p>
                 {MODE_LABELS[item.mode].fr} · {getPackage(item.packageId).name.fr} (
-                {getPackage(item.packageId).lives} live{getPackage(item.packageId).lives > 1 ? "s" : ""})
+                {durationLabel(getPackage(item.packageId).slots)})
               </p>
               <p>
+                {item.address ? `${item.address} · ` : ""}
                 {item.city}, {item.country}
               </p>
               <p>

@@ -14,12 +14,12 @@ Puis ouvrir http://localhost:3000.
 
 ## Le parcours du vendeur
 
-1. Il choisit : au studio ou à distance.
-2. Il choisit sa date sur le calendrier (à partir du 1er décembre 2026), puis son créneau.
-3. Il choisit son pack (6 packs, de 1 à 12 lives).
+1. Dès l'accueil, il choisit : en présentiel à Lomé, ou à distance.
+2. Il choisit sa date sur le calendrier (tous les jours à partir du 1er décembre 2026), puis son heure.
+3. Il choisit son package (6 packages : 1 h 30, 4 h 30, 9 h, vedette, mois).
 4. Il présente son business.
 
-L'équipe reçoit aussitôt un message : « Untel fait tel business, a réservé le mardi 1er décembre de 10:30 à 12:00 ».
+L'équipe reçoit aussitôt un message : « Untel fait tel business, a réservé le mardi 1er décembre de 10:00 à 11:30, va venir au studio » ou « sera à distance, depuis le Cameroun ».
 Le vendeur reçoit un code, un numéro de membre OCD et une liste pour se préparer.
 Quand l'équipe approuve, il reçoit son affiche à partager et sa carte de membre.
 
@@ -44,7 +44,7 @@ Copier `.env.example` vers `.env.local` et remplir.
 
 ## Ce qui se change dans un seul fichier
 
-- Les prix et les packs : `src/lib/packages.ts`
+- Les prix et les packages : `src/lib/packages.ts` (seuls 15 000 F et 20 000 F viennent de la vidéo de Bovann ; les autres prix sont des propositions)
 - Les horaires, la date d'ouverture, les jours fermés : `src/lib/slots.ts`
 - Le compte TikTok, la ville du studio : `src/lib/site.ts`
 - Le logo : fichiers dans `public/brand/` et `src/assets/` (copies de petite taille, à remplacer par les originaux du compte @OCD)
@@ -64,4 +64,5 @@ Photos de Lomé sous licence CC BY-SA 4.0 (Wikimedia Commons). Le crédit affich
 
 Les photos ont été recadrées et allégées.
 
-Les polices Anton et Figtree sont sous licence SIL Open Font License.
+La police TikTok Sans (TikTok Inc.) est sous licence SIL Open Font License.
+La silhouette de l'Afrique vient des données Natural Earth (domaine public).

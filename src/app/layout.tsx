@@ -2,17 +2,12 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { TabBar } from "@/components/tab-bar";
 import "./globals.css";
 
-const display = localFont({
-  src: "../fonts/anton.woff2",
-  variable: "--font-display",
-  weight: "400",
-  display: "swap",
-});
-
+/** TikTok Sans : la police de TikTok, publiée sous licence libre (SIL OFL). */
 const text = localFont({
-  src: "../fonts/figtree.woff2",
+  src: "../fonts/tiktok-sans.woff2",
   variable: "--font-text",
   weight: "300 900",
   display: "swap",
@@ -28,7 +23,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#071019",
+  themeColor: "#ffffff",
 };
 
 /** Choisit la langue avant le premier affichage : pas de clignotement. */
@@ -39,7 +34,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="fr"
       data-lang="fr"
-      className={`${display.variable} ${text.variable}`}
+      className={text.variable}
       suppressHydrationWarning
     >
       <head>
@@ -49,6 +44,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <SiteHeader />
         <main className="flex-1">{children}</main>
         <SiteFooter />
+        <TabBar />
       </body>
     </html>
   );

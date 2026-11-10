@@ -1,6 +1,6 @@
 import { isBusinessType } from "./business";
-import { isPackageId } from "./packages";
-import { isBookableDate, isSlotStart } from "./slots";
+import { getPackage, isPackageId } from "./packages";
+import { isBookableDate, isSlotStart, slotsFrom } from "./slots";
 import type { ReservationInput } from "./types";
 
 export class InputError extends Error {}
@@ -31,7 +31,10 @@ export function parseReservationInput(body: unknown): ReservationInput {
   const slotStart = text(data.slotStart, "Créneau", 5);
   if (!isSlotStart(slotStart)) throw new InputError("Créneau invalide.");
   const packageId = text(data.packageId, "Pack", 20);
-  if (!isPackageId(packageId)) throw new InputError("Pack invalide.");
+  if (!isPackageId(packageId)) throw new InputError("Package invalide.");
+  if (!slotsFrom(slotStart, getPackage(packageId).slots)) {
+    throw new InputError("Ce package ne tient pas dans la journée à partir de cette heure.");
+  }
   const businessType = text(data.businessType, "Activité", 20);
   if (!isBusinessType(businessType)) throw new InputError("Activité invalide.");
 
@@ -50,6 +53,7 @@ export function parseReservationInput(body: unknown): ReservationInput {
     businessName: text(data.businessName, "Nom du business", 60, 2),
     description: text(data.description, "Ce que tu vends", 400, 3),
     contactName: text(data.contactName, "Ton nom", 60, 2),
+    address: typeof data.address === "string" && data.address.trim() ? text(data.address, "Adresse", 120) : "",
     city: text(data.city, "Ville", 60, 2),
     country: text(data.country, "Pays", 60, 2),
   };

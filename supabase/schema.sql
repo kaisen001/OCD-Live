@@ -18,19 +18,27 @@ create table if not exists public.reservations (
   description text not null,
   contact_name text not null,
   whatsapp text not null,
+  address text not null default '',
   city text not null,
   country text not null,
   created_at timestamptz not null default now()
 );
 
--- Un seul live par créneau : la base refuse elle-même la double réservation.
-create unique index if not exists reservations_one_per_slot
-  on public.reservations (date, slot_start)
-  where status <> 'cancelled';
-
 create index if not exists reservations_whatsapp_idx on public.reservations (whatsapp);
 create index if not exists reservations_date_idx on public.reservations (date);
 
--- Personne ne lit la table depuis un navigateur : seul le serveur du site
+-- Les créneaux occupés. Un package long occupe plusieurs créneaux de suite.
+-- La clé (date, créneau) est unique : la base refuse elle-même la double réservation.
+create table if not exists public.booked_slots (
+  date date not null,
+  slot_start text not null,
+  reservation_id uuid not null,
+  primary key (date, slot_start)
+);
+
+create index if not exists booked_slots_reservation_idx on public.booked_slots (reservation_id);
+
+-- Personne ne lit ces tables depuis un navigateur : seul le serveur du site
 -- y accède, avec la clé secrète (service role), qui ignore ces règles.
 alter table public.reservations enable row level security;
+alter table public.booked_slots enable row level security;

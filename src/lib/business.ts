@@ -14,7 +14,7 @@ export const BUSINESS_TYPES: { id: BusinessType; label: Bi }[] = [
 ];
 
 export const MODE_LABELS: Record<LiveMode, Bi> = {
-  presentiel: { fr: "Au studio, à Lomé", en: "At the studio, in Lomé" },
+  presentiel: { fr: "En présentiel, à Lomé", en: "In person, in Lomé" },
   distance: { fr: "À distance", en: "Remote" },
 };
 

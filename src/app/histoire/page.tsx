@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: "Pourquoi OCD" };
 export default function HistoirePage() {
   return (
     <>
-      <section className="dark">
+      <section className="wall">
         <div className="shell pb-14 pt-10 md:pb-24 md:pt-20">
         <p className="kicker">
           <T fr="Pourquoi OCD" en="Why OCD" />
@@ -16,14 +16,14 @@ export default function HistoirePage() {
           <T
             fr={
               <>
-                Les <span className="text-[var(--main)]">O</span>pportunités{" "}
-                <span className="text-[var(--main)]">C</span>&apos;est{" "}
-                <span className="text-[var(--main)]">D</span>ehors.
+                Les <span className="text-[var(--main-deep)]">O</span>pportunités{" "}
+                <span className="text-[var(--main-deep)]">C</span>&apos;est{" "}
+                <span className="text-[var(--main-deep)]">D</span>ehors.
               </>
             }
             en={
               <>
-                Opportunities are <span className="text-[var(--main)]">out there.</span>
+                Opportunities are <span className="text-[var(--main-deep)]">out there.</span>
               </>
             }
           />
@@ -37,7 +37,6 @@ export default function HistoirePage() {
         </div>
       </section>
 
-      <div className="band band-tall" aria-hidden />
 
       <section className="shell sec grid gap-12 md:grid-cols-[1fr_1.1fr]">
         <div>
@@ -65,7 +64,7 @@ export default function HistoirePage() {
         </div>
 
         <div className="grid content-start gap-6">
-          <figure className="rounded-[1.75rem] bg-[var(--main)] p-8 md:-rotate-1">
+          <figure className="rounded-[1.5rem] bg-[var(--main-soft)] p-8">
             <blockquote className="display t-2">
               <T fr="« Si tu as 10 abonnés, tu as 10 clients. »" en="“If you have 10 followers, you have 10 customers.”" />
             </blockquote>

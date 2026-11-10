@@ -1,132 +1,103 @@
 import type { LivePackage, PackageId } from "./types";
 
-/** Un live dure toujours 1 h 30. */
+/** Un créneau dure toujours 1 h 30. */
 export const LIVE_MINUTES = 90;
 
 /**
- * Grille de prix PROPOSÉE (en attente de la grille officielle).
- * Règle : plus on prend de lives, moins le live coûte cher.
+ * Les 6 packages.
+ * Bovann a cité deux prix dans sa vidéo : 15 000 F et 20 000 F pour 1 h 30.
+ * Tous les autres prix sont des PROPOSITIONS, à remplacer par la grille officielle.
  * Pour changer un prix, on change `priceFcfa` ici et nulle part ailleurs.
+ *
+ * `slots` = nombre de créneaux de 1 h 30 réservés d'affilée le jour choisi.
+ * `lives` = nombre de lives compris dans le package.
  */
 export const PACKAGES: LivePackage[] = [
   {
-    id: "decouverte",
-    name: { fr: "Découverte", en: "First live" },
+    id: "simple",
+    name: { fr: "Live simple", en: "Single live" },
+    slots: 1,
     lives: 1,
     priceFcfa: 15_000,
-    summary: {
-      fr: "Un live pour essayer.",
-      en: "One live to try it out.",
-    },
+    summary: { fr: "1 h 30 de live pour placer ton produit.", en: "1.5 hours live to show your product." },
     includes: [
-      {
-        fr: "1 h 30 en direct sur House of Challenge",
-        en: "1.5 hours live on House of Challenge",
-      },
-      {
-        fr: "Ton nom et ton WhatsApp affichés à l'écran",
-        en: "Your name and WhatsApp shown on screen",
-      },
+      { fr: "Ton numéro et ton adresse à l'écran", en: "Your number and address on screen" },
     ],
   },
   {
-    id: "duo",
-    name: { fr: "Duo", en: "Duo" },
-    lives: 2,
-    priceFcfa: 28_000,
+    id: "plus",
+    name: { fr: "Live annoncé", en: "Announced live" },
+    slots: 1,
+    lives: 1,
+    priceFcfa: 20_000,
     summary: {
-      fr: "Deux passages : les clients te reconnaissent au deuxième.",
-      en: "Two shows: buyers recognise you the second time.",
+      fr: "1 h 30 de live, annoncé la veille sur House of Challenge.",
+      en: "1.5 hours live, announced the day before on House of Challenge.",
     },
     includes: [
-      { fr: "2 lives de 1 h 30", en: "2 lives of 1.5 hours" },
-      {
-        fr: "Ton nom et ton WhatsApp affichés à l'écran",
-        en: "Your name and WhatsApp shown on screen",
-      },
+      { fr: "Ton numéro et ton adresse à l'écran", en: "Your number and address on screen" },
+      { fr: "Annonce de ton live la veille", en: "Your live announced the day before" },
     ],
   },
   {
-    id: "pack4",
-    name: { fr: "Pack 4", en: "Pack of 4" },
-    lives: 4,
-    priceFcfa: 52_000,
+    id: "demi",
+    name: { fr: "Demi-journée", en: "Half day" },
+    slots: 3,
+    lives: 1,
+    priceFcfa: 36_000,
     featured: true,
     summary: {
-      fr: "Un live par semaine pendant un mois.",
-      en: "One live a week for a month.",
+      fr: "4 h 30 de suite. Moins cher que trois lives séparés.",
+      en: "4.5 hours in a row. Cheaper than three separate lives.",
     },
     includes: [
-      { fr: "4 lives de 1 h 30", en: "4 lives of 1.5 hours" },
-      {
-        fr: "Ton live annoncé la veille sur House of Challenge",
-        en: "Your live announced the day before on House of Challenge",
-      },
+      { fr: "3 créneaux de suite le même jour", en: "3 slots in a row on the same day" },
+      { fr: "Annonce de ton live la veille", en: "Your live announced the day before" },
     ],
   },
   {
-    id: "semaine",
-    name: { fr: "Semaine", en: "Full week" },
-    lives: 5,
-    priceFcfa: 62_500,
+    id: "journee",
+    name: { fr: "Journée", en: "Full day" },
+    slots: 6,
+    lives: 1,
+    priceFcfa: 60_000,
     summary: {
-      fr: "Cinq jours de suite, à la même heure.",
-      en: "Five days in a row, same time.",
+      fr: "9 h de live. Pour un lancement ou un gros stock.",
+      en: "9 hours live. For a launch or a big stock.",
     },
     includes: [
-      {
-        fr: "5 lives de 1 h 30 dans la même semaine",
-        en: "5 lives of 1.5 hours in the same week",
-      },
-      {
-        fr: "Ton live annoncé la veille sur House of Challenge",
-        en: "Your live announced the day before on House of Challenge",
-      },
+      { fr: "6 créneaux de suite le même jour", en: "6 slots in a row on the same day" },
+      { fr: "Annonce de ton live la veille", en: "Your live announced the day before" },
     ],
   },
   {
-    id: "pack8",
-    name: { fr: "Pack 8", en: "Pack of 8" },
-    lives: 8,
-    priceFcfa: 96_000,
+    id: "vedette",
+    name: { fr: "Vedette", en: "Star" },
+    slots: 1,
+    lives: 1,
+    priceFcfa: 50_000,
     summary: {
-      fr: "Deux lives par semaine pendant un mois.",
-      en: "Two lives a week for a month.",
+      fr: "Bovann poste ta vidéo sur son compte et annonce ton live. Puis tu passes en live.",
+      en: "Bovann posts your video on his account and announces your live. Then you go live.",
     },
     includes: [
-      { fr: "8 lives de 1 h 30", en: "8 lives of 1.5 hours" },
-      {
-        fr: "Ton live annoncé la veille sur House of Challenge",
-        en: "Your live announced the day before on House of Challenge",
-      },
-      {
-        fr: "Tu choisis tes créneaux avant les autres",
-        en: "You pick your slots before everyone else",
-      },
+      { fr: "Ta vidéo sur le compte de Bovann", en: "Your video on Bovann's account" },
+      { fr: "1 h 30 de live", en: "1.5 hours live" },
     ],
   },
   {
-    id: "mensuel",
-    name: { fr: "Mensuel Bovann", en: "Bovann monthly" },
+    id: "mois",
+    name: { fr: "Package du mois", en: "Monthly package" },
+    slots: 1,
     lives: 12,
     priceFcfa: 150_000,
     summary: {
-      fr: "Trois lives par semaine, et Bovann annonce ton live sur son compte.",
-      en: "Three lives a week, and Bovann announces your live on his account.",
+      fr: "12 lives de 1 h 30 sur un mois, et Bovann annonce ton live sur son compte.",
+      en: "12 lives of 1.5 hours over a month, and Bovann announces your live on his account.",
     },
     includes: [
-      {
-        fr: "12 lives de 1 h 30 sur un mois",
-        en: "12 lives of 1.5 hours over one month",
-      },
-      {
-        fr: "Annonce de ton live sur le compte TikTok de Bovann",
-        en: "Your live announced on Bovann's TikTok account",
-      },
-      {
-        fr: "Tu choisis tes créneaux avant les autres",
-        en: "You pick your slots before everyone else",
-      },
+      { fr: "3 lives par semaine pendant un mois", en: "3 lives a week for a month" },
+      { fr: "Ta vidéo sur le compte de Bovann", en: "Your video on Bovann's account" },
     ],
   },
 ];
@@ -141,8 +112,12 @@ export function isPackageId(value: string): value is PackageId {
   return PACKAGES.some((item) => item.id === value);
 }
 
-export function pricePerLive(pack: LivePackage) {
-  return Math.round(pack.priceFcfa / pack.lives);
+/** Durée d'un passage : 1 créneau = "1 h 30", 3 créneaux = "4 h 30". */
+export function durationLabel(slots: number) {
+  const minutes = slots * LIVE_MINUTES;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return m ? `${h} h ${String(m).padStart(2, "0")}` : `${h} h`;
 }
 
 /** 15000 -> "15 000 FCFA" (espace insécable, lisible partout). */

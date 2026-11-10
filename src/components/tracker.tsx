@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { businessLabel, MODE_LABELS } from "@/lib/business";
-import { getPackage } from "@/lib/packages";
+import { durationLabel, getPackage } from "@/lib/packages";
 import { SITE } from "@/lib/site";
 import { formatDate, localTimeFor } from "@/lib/slots";
 import type { Lang, PublicReservation } from "@/lib/types";
@@ -256,9 +256,10 @@ export function Tracker() {
             <dd className="font-bold">{MODE_LABELS[r.mode][lang]}</dd>
           </div>
           <div>
-            <dt className="text-sm font-bold uppercase tracking-wider text-[var(--muted)]">Pack</dt>
+            <dt className="text-sm font-bold uppercase tracking-wider text-[var(--muted)]">Package</dt>
             <dd className="font-bold">
-              {pack.name[lang]} · {pack.lives} live{pack.lives > 1 ? "s" : ""} · <Price amount={r.priceFcfa} />
+              {pack.name[lang]} · {pack.lives > 1 ? `${pack.lives} × ` : ""}
+              {durationLabel(pack.slots)} · <Price amount={r.priceFcfa} />
             </dd>
           </div>
           <div className="sm:col-span-2">
@@ -298,7 +299,7 @@ export function Tracker() {
                 alt={lang === "fr" ? "Ton affiche" : "Your poster"}
                 width={1080}
                 height={1350}
-                className="w-full rounded-2xl shadow-[0_30px_60px_-30px_rgba(7,16,25,0.6)]"
+                className="w-full rounded-2xl shadow-[0_24px_50px_-28px_rgba(22,24,35,0.55)]"
               />
               <div className="mt-5 grid gap-3">
                 <ShareImage
@@ -324,7 +325,7 @@ export function Tracker() {
                 alt={lang === "fr" ? "Ta carte de membre" : "Your member card"}
                 width={1080}
                 height={680}
-                className="w-full rounded-xl shadow-[0_20px_40px_-18px_rgba(7,16,25,0.6)]"
+                className="w-full rounded-xl shadow-[0_18px_36px_-18px_rgba(22,24,35,0.6)]"
               />
               <div className="mt-5">
                 <ShareImage
@@ -361,8 +362,8 @@ export function Tracker() {
           </h2>
           <ol className="mt-6">
             {PREP[r.mode].map((line, index) => (
-              <li key={line.fr} className="flex gap-4 border-t border-[var(--line)] py-4">
-                <span className="display text-3xl text-[var(--main-deep)]">{index + 1}</span>
+              <li key={line.fr} className="flex items-center gap-4 border-t border-[var(--line)] py-3.5">
+                <span className="step-num shrink-0">{index + 1}</span>
                 <span className="font-semibold">
                   <T fr={line.fr} en={line.en} />
                 </span>

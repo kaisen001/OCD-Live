@@ -5,19 +5,19 @@ import { T } from "./t";
 
 export function SiteHeader() {
   return (
-    <header className="dark sticky top-0 z-40 border-b border-[var(--line)]">
+    <header className="sticky top-0 z-40 border-b border-[var(--line)] bg-white">
       <div className="shell flex h-[var(--header-h)] items-center justify-between gap-3">
         <Link href="/" aria-label="OCD Live">
-          <Logo onDark className="h-7 w-auto sm:h-8" />
+          <Logo className="h-7 w-auto sm:h-8" />
         </Link>
-        <nav className="flex items-center gap-1 text-[0.95rem] sm:gap-2">
-          <Link href="/#prix" className="hidden px-3 py-2 font-semibold hover:text-[var(--main)] md:block">
-            <T fr="Prix" en="Prices" />
+        <nav className="flex items-center gap-1 text-[0.97rem] sm:gap-2">
+          <Link href="/#packages" className="hidden px-3 py-2 font-semibold hover:text-[var(--main-deep)] md:block">
+            <T fr="Packages" en="Packages" />
           </Link>
-          <Link href="/histoire" className="hidden px-3 py-2 font-semibold hover:text-[var(--main)] md:block">
+          <Link href="/histoire" className="hidden px-3 py-2 font-semibold hover:text-[var(--main-deep)] md:block">
             <T fr="Pourquoi OCD" en="Why OCD" />
           </Link>
-          <Link href="/suivi" className="hidden px-3 py-2 font-semibold hover:text-[var(--main)] sm:block">
+          <Link href="/suivi" className="hidden px-3 py-2 font-semibold hover:text-[var(--main-deep)] md:block">
             <T fr="Mon live" en="My live" />
           </Link>
           <LangToggle />

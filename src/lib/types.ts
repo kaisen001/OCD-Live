@@ -16,18 +16,21 @@ export type BusinessType =
   | "autre";
 
 export type PackageId =
-  | "decouverte"
-  | "duo"
-  | "pack4"
-  | "semaine"
-  | "pack8"
-  | "mensuel";
+  | "simple"
+  | "plus"
+  | "demi"
+  | "journee"
+  | "vedette"
+  | "mois";
 
 export type ReservationStatus = "pending" | "confirmed" | "cancelled";
 
 export type LivePackage = {
   id: PackageId;
   name: Bi;
+  /** Créneaux de 1 h 30 réservés d'affilée le jour choisi. */
+  slots: number;
+  /** Nombre de lives compris. */
   lives: number;
   priceFcfa: number;
   summary: Bi;
@@ -45,6 +48,8 @@ export type ReservationInput = {
   description: string;
   contactName: string;
   whatsapp: string;
+  /** Adresse de la boutique, affichée pendant le live. Facultatif. */
+  address: string;
   city: string;
   country: string;
 };
@@ -74,6 +79,7 @@ export type PublicReservation = Pick<
   | "businessName"
   | "businessType"
   | "contactName"
+  | "address"
   | "city"
   | "country"
 >;

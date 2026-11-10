@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BUSINESS_TYPES, MODE_LABELS } from "@/lib/business";
-import { PACKAGES, getPackage, pricePerLive } from "@/lib/packages";
+import { PACKAGES, durationLabel, getPackage } from "@/lib/packages";
 import {
   SLOT_STARTS,
   calendarMonths,
@@ -11,6 +11,7 @@ import {
   formatMonth,
   localTimeFor,
   slotEnd,
+  slotsFrom,
   weekdayInitials,
 } from "@/lib/slots";
 import type { BusinessType, LiveMode, PackageId } from "@/lib/types";
@@ -28,6 +29,7 @@ type Form = {
   description: string;
   contactName: string;
   whatsapp: string;
+  address: string;
   city: string;
   country: string;
   website: string;
@@ -43,6 +45,7 @@ const EMPTY: Form = {
   description: "",
   contactName: "",
   whatsapp: "",
+  address: "",
   city: "",
   country: "",
   website: "",
@@ -51,7 +54,7 @@ const EMPTY: Form = {
 const STEP_TITLES = [
   { fr: "Où veux-tu faire ton live ?", en: "Where do you want to go live?" },
   { fr: "Quel jour, à quelle heure ?", en: "Which day, what time?" },
-  { fr: "Combien de lives ?", en: "How many lives?" },
+  { fr: "Quel package ?", en: "Which package?" },
   { fr: "Parle-nous de ton business.", en: "Tell us about your business." },
 ];
 
@@ -62,11 +65,11 @@ export function BookingWizard() {
   const visitor = useVisitor();
   const top = useRef<HTMLDivElement>(null);
 
-  const [step, setStep] = useState(0);
-  const [form, setForm] = useState<Form>(() => {
-    const format = params.get("format");
-    return { ...EMPTY, mode: format === "presentiel" || format === "distance" ? format : null };
-  });
+  // Venu de l'accueil, le visiteur a déjà choisi présentiel ou distance : on passe au calendrier.
+  const format = params.get("format");
+  const chosen = format === "presentiel" || format === "distance" ? format : null;
+  const [step, setStep] = useState(chosen ? 1 : 0);
+  const [form, setForm] = useState<Form>({ ...EMPTY, mode: chosen });
   const [taken, setTaken] = useState<Record<string, string[]> | null>(null);
   const [calendarDown, setCalendarDown] = useState(false);
   const [monthIndex, setMonthIndex] = useState(0);
@@ -100,6 +103,12 @@ export function BookingWizard() {
   }
 
   const takenToday = (form.date && taken?.[form.date]) || [];
+
+  /** Un package long a besoin de plusieurs créneaux libres de suite à partir de l'heure choisie. */
+  function fits(slots: number) {
+    const needed = slotsFrom(form.slotStart, slots);
+    return Boolean(needed && !needed.some((slot) => takenToday.includes(slot)));
+  }
   const pack = form.packageId ? getPackage(form.packageId) : null;
   const formReady =
     form.businessName.trim().length >= 2 &&
@@ -185,7 +194,7 @@ export function BookingWizard() {
             onClick={() => set("mode", "presentiel")}
           >
             <span className="display t-3">
-              <T fr="Au studio, à Lomé" en="At the studio, in Lomé" />
+              <T fr="En présentiel, à Lomé (Togo)" en="In person, in Lomé (Togo)" />
             </span>
             <span>
               <T
@@ -220,7 +229,7 @@ export function BookingWizard() {
             <div className="flex items-center justify-between gap-2">
               <button
                 type="button"
-                className="btn btn-plain btn-small !min-w-11 !border-[var(--line)] !px-0"
+                className="btn btn-plain btn-small !min-w-11 !px-0"
                 disabled={monthIndex === 0}
                 onClick={() => setMonthIndex((i) => i - 1)}
                 aria-label={lang === "fr" ? "Mois précédent" : "Previous month"}
@@ -230,7 +239,7 @@ export function BookingWizard() {
               <p className="display text-xl capitalize">{formatMonth(month.year, month.month, lang)}</p>
               <button
                 type="button"
-                className="btn btn-plain btn-small !min-w-11 !border-[var(--line)] !px-0"
+                className="btn btn-plain btn-small !min-w-11 !px-0"
                 disabled={monthIndex === months.length - 1}
                 onClick={() => setMonthIndex((i) => i + 1)}
                 aria-label={lang === "fr" ? "Mois suivant" : "Next month"}
@@ -264,8 +273,8 @@ export function BookingWizard() {
             </div>
             <p className="mt-3 text-sm text-[var(--muted)]">
               <T
-                fr="Les lives commencent le 1er décembre 2026. Pas de live le dimanche."
-                en="Lives start on 1 December 2026. No lives on Sundays."
+                fr="Les lives commencent le 1er décembre 2026."
+                en="Lives start on 1 December 2026."
               />
             </p>
           </div>
@@ -302,7 +311,7 @@ export function BookingWizard() {
                       className="slot"
                       disabled={isTaken || taken === null}
                       aria-pressed={form.slotStart === start}
-                      onClick={() => set("slotStart", start)}
+                      onClick={() => setForm((prev) => ({ ...prev, slotStart: start, packageId: null }))}
                     >
                       {start}
                       <small>
@@ -323,39 +332,49 @@ export function BookingWizard() {
         </div>
       ) : null}
 
-      {/* ---------- 3. Pack ---------- */}
+      {/* ---------- 3. Package ---------- */}
       {step === 2 ? (
         <div className="rise mt-7 grid gap-3" role="radiogroup">
-          {PACKAGES.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              role="radio"
-              className="choice"
-              aria-checked={form.packageId === item.id}
-              onClick={() => set("packageId", item.id)}
-            >
-              <span className="flex flex-wrap items-baseline justify-between gap-x-4">
-                <span className="display t-3">
-                  <T fr={item.name.fr} en={item.name.en} />
-                  <span className="ml-2 font-[family-name:var(--font-text)] text-sm font-bold normal-case text-[var(--muted)]">
-                    · {item.lives} live{item.lives > 1 ? "s" : ""}
+          {PACKAGES.map((item) => {
+            const ok = fits(item.slots);
+            return (
+              <button
+                key={item.id}
+                type="button"
+                role="radio"
+                className="choice"
+                disabled={!ok}
+                aria-checked={form.packageId === item.id}
+                onClick={() => set("packageId", item.id)}
+              >
+                <span className="flex flex-wrap items-baseline justify-between gap-x-4">
+                  <span className="display t-3">
+                    <T fr={item.name.fr} en={item.name.en} />
                   </span>
+                  <Price amount={item.priceFcfa} className="display t-3" />
                 </span>
-                <Price amount={item.priceFcfa} className="display text-xl" />
-              </span>
-              <span>
-                <T fr={item.summary.fr} en={item.summary.en} />
-              </span>
-              {item.lives > 1 ? (
                 <span className="text-sm font-bold">
-                  <T fr="Soit " en="That's " />
-                  <Price amount={pricePerLive(item)} approx={false} />
-                  <T fr=" le live" en=" per live" />
+                  {item.lives > 1 ? `${item.lives} × ${durationLabel(item.slots)}` : durationLabel(item.slots)}
+                  {ok ? (
+                    <span className="font-semibold text-[var(--muted)]">
+                      {" · "}
+                      {form.slotStart} → {slotEnd(form.slotStart, item.slots)}
+                    </span>
+                  ) : null}
                 </span>
-              ) : null}
-            </button>
-          ))}
+                <span className="text-[0.97rem]">
+                  {ok ? (
+                    <T fr={item.summary.fr} en={item.summary.en} />
+                  ) : (
+                    <T
+                      fr={`Il faut ${item.slots} créneaux libres de suite à partir de ${form.slotStart}. Choisis une heure plus tôt.`}
+                      en={`This needs ${item.slots} free slots in a row from ${form.slotStart}. Pick an earlier time.`}
+                    />
+                  )}
+                </span>
+              </button>
+            );
+          })}
           {pack && pack.lives > 1 ? (
             <p className="notice">
               <T
@@ -460,6 +479,25 @@ export function BookingWizard() {
               />
             </span>
           </div>
+          <div className="field">
+            <label htmlFor="address">
+              <T fr="Adresse de ta boutique (facultatif)" en="Your shop address (optional)" />
+            </label>
+            <input
+              id="address"
+              value={form.address}
+              maxLength={120}
+              autoComplete="street-address"
+              onChange={(e) => set("address", e.target.value)}
+              placeholder={lang === "fr" ? "Ex. Marché de Hédzranawoé, hangar 4" : "E.g. Hédzranawoé market, shed 4"}
+            />
+            <span className="hint">
+              <T
+                fr="On l'affiche pendant ton live, avec ton numéro."
+                en="We show it during your live, with your number."
+              />
+            </span>
+          </div>
           <div className="grid gap-5 sm:grid-cols-2">
             <div className="field">
               <label htmlFor="city">
@@ -515,7 +553,7 @@ export function BookingWizard() {
       ) : null}
 
       {/* ---------- Récapitulatif + boutons ---------- */}
-      <div className="sticky bottom-0 z-30 -mx-5 mt-8 border-t border-[var(--line)] bg-[var(--paper)] px-5 py-3 sm:static sm:mx-0 sm:border-0 sm:px-0">
+      <div className="sticky bottom-0 z-30 -mx-5 mt-8 border-t border-[var(--line)] bg-white px-5 py-3 sm:static sm:mx-0 sm:border-0 sm:px-0">
         {form.mode ? (
           <p className="mb-3 text-sm font-semibold text-[var(--ink-soft)]">
             {MODE_LABELS[form.mode][lang]}

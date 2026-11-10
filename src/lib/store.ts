@@ -2,7 +2,7 @@ import { promises as fs } from "fs";
 import { randomInt } from "crypto";
 import path from "path";
 import { getPackage } from "./packages";
-import { slotEnd } from "./slots";
+import { slotEnd, slotsFrom } from "./slots";
 import type {
   AgendaItem,
   PublicReservation,
@@ -54,9 +54,15 @@ export function toPublic(r: Reservation): PublicReservation {
     businessName: r.businessName,
     businessType: r.businessType,
     contactName: r.contactName,
+    address: r.address,
     city: r.city,
     country: r.country,
   };
+}
+
+/** Les créneaux qu'une réservation occupe ce jour-là. */
+function slotsOf(r: Pick<Reservation, "slotStart" | "packageId">) {
+  return slotsFrom(r.slotStart, getPackage(r.packageId).slots) ?? [r.slotStart];
 }
 
 function toAgenda(r: Reservation): AgendaItem {
@@ -78,7 +84,7 @@ function build(input: ReservationInput, memberNo: number): Reservation {
     id: crypto.randomUUID(),
     code: makeCode(),
     memberNo,
-    slotEnd: slotEnd(input.slotStart),
+    slotEnd: slotEnd(input.slotStart, getPackage(input.packageId).slots),
     priceFcfa: getPackage(input.packageId).priceFcfa,
     status: "pending",
     createdAt: new Date().toISOString(),
@@ -103,6 +109,7 @@ type Row = {
   description: string;
   contact_name: string;
   whatsapp: string;
+  address: string;
   city: string;
   country: string;
   created_at: string;
@@ -125,6 +132,7 @@ function fromRow(row: Row): Reservation {
     description: row.description,
     contactName: row.contact_name,
     whatsapp: row.whatsapp,
+    address: row.address ?? "",
     city: row.city,
     country: row.country,
     createdAt: row.created_at,
@@ -148,14 +156,15 @@ function toRow(r: Reservation): Row {
     description: r.description,
     contact_name: r.contactName,
     whatsapp: r.whatsapp,
+    address: r.address,
     city: r.city,
     country: r.country,
     created_at: r.createdAt,
   };
 }
 
-async function db(query: string, init: RequestInit = {}) {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/reservations${query}`, {
+async function db<T = Row>(query: string, init: RequestInit = {}, table = "reservations") {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}${query}`, {
     ...init,
     cache: "no-store",
     headers: {
@@ -170,7 +179,28 @@ async function db(query: string, init: RequestInit = {}) {
     console.error("Supabase", res.status, await res.text());
     throw new Error("La base de données ne répond pas. Réessaie dans un instant.");
   }
-  return res.status === 204 ? [] : ((await res.json()) as Row[]);
+  return res.status === 204 ? [] : ((await res.json()) as T[]);
+}
+
+type SlotRow = { date: string; slot_start: string; reservation_id: string };
+
+/** Bloque tous les créneaux d'une réservation d'un seul coup. Si un seul est pris : refus. */
+async function holdSlots(r: Reservation) {
+  await db<SlotRow>(
+    "",
+    {
+      method: "POST",
+      headers: { Prefer: "return=minimal" },
+      body: JSON.stringify(
+        slotsOf(r).map((slot) => ({ date: r.date, slot_start: slot, reservation_id: r.id })),
+      ),
+    },
+    "booked_slots",
+  );
+}
+
+async function releaseSlots(id: string) {
+  await db<SlotRow>(`?reservation_id=eq.${q(id)}`, { method: "DELETE" }, "booked_slots");
 }
 
 const q = encodeURIComponent;
@@ -205,6 +235,17 @@ async function writeLocal(list: Reservation[]) {
   }
 }
 
+function overlaps(list: Reservation[], r: Reservation) {
+  const wanted = slotsOf(r);
+  return list.some(
+    (item) =>
+      item.id !== r.id &&
+      item.status !== "cancelled" &&
+      item.date === r.date &&
+      slotsOf(item).some((slot) => wanted.includes(slot)),
+  );
+}
+
 // ---------- API du stockage ----------
 
 /** Un vendeur garde son numéro de membre : il est lié à son WhatsApp. */
@@ -225,22 +266,22 @@ export async function createReservation(input: ReservationInput) {
   const reservation = build(input, await memberNoFor(input.whatsapp));
 
   if (usingDatabase) {
-    const rows = await db("", {
-      method: "POST",
-      headers: { Prefer: "return=representation" },
-      body: JSON.stringify(toRow(reservation)),
-    });
-    return fromRow(rows[0]);
+    await holdSlots(reservation);
+    try {
+      const rows = await db("", {
+        method: "POST",
+        headers: { Prefer: "return=representation" },
+        body: JSON.stringify(toRow(reservation)),
+      });
+      return fromRow(rows[0]);
+    } catch (error) {
+      await releaseSlots(reservation.id).catch(() => undefined);
+      throw error;
+    }
   }
 
   const list = await readLocal();
-  const taken = list.some(
-    (item) =>
-      item.status !== "cancelled" &&
-      item.date === input.date &&
-      item.slotStart === input.slotStart,
-  );
-  if (taken) throw new SlotTakenError();
+  if (overlaps(list, reservation)) throw new SlotTakenError();
   await writeLocal([reservation, ...list]);
   return reservation;
 }
@@ -262,14 +303,16 @@ export async function listTakenSlots(from: string, to: string) {
     (taken[date] ??= []).push(slot);
   };
   if (usingDatabase) {
-    const rows = await db(
-      `?select=date,slot_start&status=neq.cancelled&date=gte.${q(from)}&date=lte.${q(to)}`,
+    const rows = await db<SlotRow>(
+      `?select=date,slot_start&date=gte.${q(from)}&date=lte.${q(to)}`,
+      {},
+      "booked_slots",
     );
     rows.forEach((row) => add(row.date, row.slot_start));
   } else {
     (await readLocal())
       .filter((item) => item.status !== "cancelled" && item.date >= from && item.date <= to)
-      .forEach((item) => add(item.date, item.slotStart));
+      .forEach((item) => slotsOf(item).forEach((slot) => add(item.date, slot)));
   }
   return taken;
 }
@@ -299,28 +342,24 @@ export async function listAllReservations() {
 export async function updateReservationStatus(id: string, status: ReservationStatus) {
   if (usingDatabase) {
     if (!/^[0-9a-f-]{36}$/i.test(id)) throw new Error("Réservation introuvable.");
+    const found = await db(`?select=*&id=eq.${q(id)}&limit=1`);
+    if (!found[0]) throw new Error("Réservation introuvable.");
+    const current = fromRow(found[0]);
+    // Annuler libère les créneaux ; réactiver les reprend (refus s'ils sont partis).
+    if (status === "cancelled" && current.status !== "cancelled") await releaseSlots(id);
+    if (status !== "cancelled" && current.status === "cancelled") await holdSlots(current);
     const rows = await db(`?id=eq.${q(id)}`, {
       method: "PATCH",
       headers: { Prefer: "return=representation" },
       body: JSON.stringify({ status }),
     });
-    if (!rows[0]) throw new Error("Réservation introuvable.");
     return fromRow(rows[0]);
   }
 
   const list = await readLocal();
   const current = list.find((item) => item.id === id);
   if (!current) throw new Error("Réservation introuvable.");
-  if (status !== "cancelled") {
-    const conflict = list.some(
-      (item) =>
-        item.id !== id &&
-        item.status !== "cancelled" &&
-        item.date === current.date &&
-        item.slotStart === current.slotStart,
-    );
-    if (conflict) throw new SlotTakenError();
-  }
+  if (status !== "cancelled" && overlaps(list, current)) throw new SlotTakenError();
   const updated = { ...current, status };
   await writeLocal(list.map((item) => (item.id === id ? updated : item)));
   return updated;

@@ -56,10 +56,10 @@ export function Agenda() {
         >
           <p className="font-bold">
             <span className="inline-block first-letter:uppercase">{formatDate(item.date, lang)}</span>
-            <span className="display ml-2 text-[var(--main-deep)]">{item.slotStart}</span>
+            <span className="ml-2 font-extrabold text-[var(--main-deep)]">{item.slotStart}</span>
           </p>
           <p>
-            <span className="display text-2xl">{item.businessName}</span>
+            <span className="display text-xl">{item.businessName}</span>
             <span className="ml-2 text-[var(--muted)]">
               {businessLabel(item.businessType)[lang]} · {item.city}
             </span>

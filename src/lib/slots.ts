@@ -5,19 +5,24 @@ import type { Lang } from "./types";
 export const BOOKING_OPENS_ON = "2026-12-01";
 /** Nombre de jours ouverts à la réservation à partir du premier jour. */
 export const BOOKING_WINDOW_DAYS = 62;
-/** Jours fermés (0 = dimanche). Vide = ouvert tous les jours. */
-export const CLOSED_WEEKDAYS: number[] = [0];
+/** Jours fermés (0 = dimanche). Vide = ouvert tous les jours, comme demandé. */
+export const CLOSED_WEEKDAYS: number[] = [];
 
-/** Heures de début, à l'heure de Lomé (GMT). Chaque live dure 1 h 30. */
+/**
+ * Heures de début, à l'heure de Lomé (GMT). Chaque créneau dure 1 h 30
+ * et ils se suivent sans trou : on peut en réserver plusieurs d'affilée.
+ * (L'exemple de Bovann : « de 10 h à 11 h 30 ».)
+ */
 export const SLOT_STARTS = [
-  "09:00",
-  "10:30",
-  "12:00",
-  "14:00",
-  "15:30",
-  "17:00",
-  "18:30",
-  "20:00",
+  "08:30",
+  "10:00",
+  "11:30",
+  "13:00",
+  "14:30",
+  "16:00",
+  "17:30",
+  "19:00",
+  "20:30",
 ];
 
 export function addMinutes(time: string, minutes: number) {
@@ -28,8 +33,16 @@ export function addMinutes(time: string, minutes: number) {
   return `${hh}:${mm}`;
 }
 
-export function slotEnd(start: string) {
-  return addMinutes(start, LIVE_MINUTES);
+/** Heure de fin d'un passage de `count` créneaux. */
+export function slotEnd(start: string, count = 1) {
+  return addMinutes(start, LIVE_MINUTES * count);
+}
+
+/** Les créneaux occupés par un passage de `count` créneaux, ou null s'il dépasse la journée. */
+export function slotsFrom(start: string, count: number) {
+  const index = SLOT_STARTS.indexOf(start);
+  if (index < 0 || index + count > SLOT_STARTS.length) return null;
+  return SLOT_STARTS.slice(index, index + count);
 }
 
 export function isSlotStart(value: string) {
