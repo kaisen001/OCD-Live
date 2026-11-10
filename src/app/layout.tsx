@@ -1,34 +1,51 @@
-import type { Metadata } from "next";
-import { Manrope, Syne } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import localFont from "next/font/local";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import "./globals.css";
 
-const syne = Syne({
-  variable: "--font-syne",
-  subsets: ["latin"],
-  weight: ["600", "700", "800"],
+const display = localFont({
+  src: "../fonts/bricolage.woff2",
+  variable: "--font-display",
+  weight: "200 800",
+  display: "swap",
 });
 
-const manrope = Manrope({
-  variable: "--font-manrope",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+const text = localFont({
+  src: "../fonts/instrument.woff2",
+  variable: "--font-text",
+  weight: "400 700",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "OCD Live — Des clients WhatsApp. En live.",
+  title: {
+    default: "OCD Live : réserve ton live de vente sur House of Challenge",
+    template: "%s · OCD Live",
+  },
   description:
-    "Réservez un live commercial OCD : présentiel au Togo ou à distance, calendrier dès le 1er décembre, 6 packages clairs.",
+    "Vends en direct sur le TikTok House of Challenge, au studio de Lomé ou à distance. Un live dure 1 h 30. À partir de 15 000 FCFA. Premiers lives le 1er décembre 2026.",
 };
+
+export const viewport: Viewport = {
+  themeColor: "#c63d17",
+};
+
+/** Choisit la langue avant le premier affichage : pas de clignotement. */
+const langScript = `try{var l=localStorage.getItem("ocd-lang");if(l!=="fr"&&l!=="en"){l=(navigator.language||"fr").toLowerCase().indexOf("en")===0?"en":"fr"}var d=document.documentElement;d.dataset.lang=l;d.lang=l}catch(e){}`;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="fr"
-      className={`${syne.variable} ${manrope.variable} h-full antialiased`}
+      data-lang="fr"
+      className={`${display.variable} ${text.variable}`}
+      suppressHydrationWarning
     >
-      <body className="flex min-h-full flex-col">
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: langScript }} />
+      </head>
+      <body className="flex min-h-dvh flex-col antialiased">
         <SiteHeader />
         <main className="flex-1">{children}</main>
         <SiteFooter />

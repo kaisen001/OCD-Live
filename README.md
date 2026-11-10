@@ -1,6 +1,7 @@
 # OCD Live
 
-Site de réservation de lives commerciaux pour entrepreneurs (présentiel Togo / à distance).
+Site de réservation de lives de vente sur le TikTok House of Challenge.
+Au studio de Lomé ou à distance. Un live dure 1 h 30.
 
 ## Démarrer
 
@@ -9,21 +10,49 @@ npm install
 npm run dev
 ```
 
-Ouvre [http://localhost:3000](http://localhost:3000).
+Puis ouvrir http://localhost:3000.
 
-## Parcours
+## Le parcours du vendeur
 
-1. Mode + métier (reco pack)
-2. Date + créneau + package
-3. Fiche business → code suivi + kit prep + notif admin
+1. Il choisit : au studio ou à distance.
+2. Il choisit sa date sur le calendrier (à partir du 1er décembre 2026), puis son créneau.
+3. Il choisit son pack (6 packs, de 1 à 12 lives).
+4. Il présente son business.
 
-## Admin
+L'équipe reçoit aussitôt un message : « Untel fait tel business, a réservé le mardi 1er décembre de 10:30 à 12:00 ».
+Le vendeur reçoit un code, un numéro de membre OCD et une liste pour se préparer.
+Quand l'équipe approuve, il reçoit son affiche à partager et sa carte de membre.
 
-- URL : [/admin](http://localhost:3000/admin)
-- Mot de passe local par défaut : `ocd-admin` (override via `ADMIN_PASSWORD`)
-- Les réservations restent `pending` jusqu’à **Approuver** → ensuite visibles sur l’accueil
+## Les pages
 
-## Notif admin
+| Page | Rôle |
+| --- | --- |
+| `/` | Accueil, prix, programme des lives approuvés |
+| `/reserver` | Réservation en 4 étapes |
+| `/suivi?code=OCD-XXXXXX` | Suivi, affiche, carte OCD, préparation |
+| `/histoire` | Pourquoi « Les Opportunités C'est Dehors » |
+| `/admin` | Espace équipe : approuver, annuler, écrire au vendeur sur WhatsApp |
 
-Sans config : log console serveur.  
-Optionnel : `ADMIN_WEBHOOK_URL` dans `.env.local` (voir `.env.example`).
+## Réglages
+
+Copier `.env.example` vers `.env.local` et remplir.
+
+- **Espace équipe** : `ADMIN_PASSWORD` et `ADMIN_SECRET`. En ligne, sans mot de passe défini, personne ne peut entrer.
+- **Base de données** : `SUPABASE_URL` et `SUPABASE_SERVICE_ROLE_KEY`. Coller une fois `supabase/schema.sql` dans l'éditeur SQL de Supabase. Sans ces deux valeurs, les réservations vont dans `data/reservations.json` : bien pour tester, pas pour la mise en ligne.
+- **Notification de l'équipe** : `RESEND_API_KEY` et `TEAM_EMAIL` pour l'e-mail, ou `TEAM_WEBHOOK_URL`. Sans réglage, le message s'écrit dans le journal du serveur.
+- **WhatsApp officiel** : `NEXT_PUBLIC_TEAM_WHATSAPP`.
+
+## Ce qui se change dans un seul fichier
+
+- Les prix et les packs : `src/lib/packages.ts`
+- Les horaires, la date d'ouverture, les jours fermés : `src/lib/slots.ts`
+- Le compte TikTok, la ville du studio : `src/lib/site.ts`
+- Le logo : `src/components/logo.tsx` (emplacement prévu pour le logo officiel)
+- Les couleurs : en haut de `src/app/globals.css`
+
+## Emplacements à compléter avec du vrai contenu
+
+- Les avis des vendeurs, sur l'accueil (après les premiers lives).
+- L'histoire de Bovann, sur `/histoire` (son texte, ses photos).
+
+Les polices Bricolage Grotesque et Instrument Sans sont sous licence SIL Open Font License.

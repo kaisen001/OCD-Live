@@ -5,19 +5,22 @@ export const ADMIN_COOKIE = "ocd_admin_session";
 const SESSION_DAYS = 7;
 
 function secret() {
-  return (
-    process.env.ADMIN_SECRET ||
-    process.env.ADMIN_PASSWORD ||
-    "ocd-live-dev-secret"
-  );
+  const value = process.env.ADMIN_SECRET || process.env.ADMIN_PASSWORD;
+  if (value) return value;
+  // En ligne, pas de secret connu d'avance : sans réglage, aucune session n'est valable.
+  return process.env.NODE_ENV === "production" ? null : "ocd-live-dev-secret";
 }
 
+/** En ligne, pas de mot de passe par défaut : sans ADMIN_PASSWORD, personne n'entre. */
 export function getAdminPassword() {
-  return process.env.ADMIN_PASSWORD || "ocd-admin";
+  if (process.env.ADMIN_PASSWORD) return process.env.ADMIN_PASSWORD;
+  return process.env.NODE_ENV === "production" ? null : "ocd-admin";
 }
 
 function sign(payload: string) {
-  return createHmac("sha256", secret()).update(payload).digest("hex");
+  const key = secret();
+  if (!key) throw new Error("ADMIN_SECRET manquant.");
+  return createHmac("sha256", key).update(payload).digest("hex");
 }
 
 export function createAdminSession() {
@@ -35,8 +38,8 @@ export function verifyAdminSession(token: string | undefined | null) {
   const exp = Number(expRaw);
   if (!Number.isFinite(exp) || Date.now() > exp) return false;
   const payload = `${role}.${expRaw}`;
-  const expected = sign(payload);
   try {
+    const expected = sign(payload);
     const a = Buffer.from(sig);
     const b = Buffer.from(expected);
     if (a.length !== b.length) return false;
@@ -48,6 +51,7 @@ export function verifyAdminSession(token: string | undefined | null) {
 
 export function checkAdminPassword(password: string) {
   const expected = getAdminPassword();
+  if (!expected) return false;
   const a = Buffer.from(password);
   const b = Buffer.from(expected);
   if (a.length !== b.length) return false;

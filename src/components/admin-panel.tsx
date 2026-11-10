@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { businessLabel, modeLabel } from "@/lib/business";
-import { formatFcfa } from "@/lib/packages";
-import { formatDateFr } from "@/lib/slots";
+import { useEffect, useMemo, useState } from "react";
+import { businessLabel, MODE_LABELS } from "@/lib/business";
+import { formatFcfa, getPackage } from "@/lib/packages";
+import { formatDate } from "@/lib/slots";
 import type { Reservation, ReservationStatus } from "@/lib/types";
 
 const FILTERS: { id: "all" | ReservationStatus; label: string }[] = [
@@ -12,6 +12,12 @@ const FILTERS: { id: "all" | ReservationStatus; label: string }[] = [
   { id: "confirmed", label: "Approuvées" },
   { id: "cancelled", label: "Annulées" },
 ];
+
+/** Message WhatsApp prérempli pour confirmer le créneau au vendeur. */
+function whatsappLink(item: Reservation) {
+  const text = `Bonjour ${item.contactName}, ici l'équipe OCD Live. Nous avons bien reçu ta réservation ${item.code} pour ${item.businessName} : ${formatDate(item.date)} de ${item.slotStart} à ${item.slotEnd} (heure de Lomé).`;
+  return `https://wa.me/${item.whatsapp}?text=${encodeURIComponent(text)}`;
+}
 
 function statusLabel(status: ReservationStatus) {
   if (status === "pending") return "En attente";
@@ -29,29 +35,23 @@ export function AdminPanel() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
-  const loadSession = useCallback(async () => {
-    const res = await fetch("/api/admin/session");
-    const data = await res.json();
-    setAuthed(Boolean(data.authenticated));
-  }, []);
-
-  const loadReservations = useCallback(async () => {
-    const res = await fetch("/api/admin/reservations");
-    if (res.status === 401) {
-      setAuthed(false);
-      return;
-    }
-    const data = await res.json();
-    setReservations(data.reservations ?? []);
+  useEffect(() => {
+    fetch("/api/admin/session")
+      .then((res) => res.json())
+      .then((data) => setAuthed(Boolean(data.authenticated)))
+      .catch(() => setAuthed(false));
   }, []);
 
   useEffect(() => {
-    void loadSession();
-  }, [loadSession]);
-
-  useEffect(() => {
-    if (authed) void loadReservations();
-  }, [authed, loadReservations]);
+    if (!authed) return;
+    fetch("/api/admin/reservations")
+      .then((res) => (res.status === 401 ? null : res.json()))
+      .then((data) => {
+        if (!data) setAuthed(false);
+        else setReservations(data.reservations ?? []);
+      })
+      .catch(() => setActionError("Impossible de charger les réservations."));
+  }, [authed]);
 
   const visible = useMemo(() => {
     if (filter === "all") return reservations;
@@ -117,7 +117,7 @@ export function AdminPanel() {
 
   if (authed === null) {
     return (
-      <div className="surface-card mx-auto max-w-md p-6 text-sm text-[var(--muted)]">
+      <div className="panel mx-auto max-w-md p-6 text-sm text-[var(--muted)]">
         Vérification session…
       </div>
     );
@@ -127,14 +127,14 @@ export function AdminPanel() {
     return (
       <form
         onSubmit={login}
-        className="surface-card mx-auto max-w-md space-y-5 p-6 md:p-8"
+        className="panel mx-auto max-w-md space-y-5 p-6 md:p-8"
       >
-        <p className="section-kicker">Admin OCD</p>
-        <h1 className="font-display text-[clamp(1.7rem,4vw,2.4rem)] font-extrabold tracking-[-0.035em]">
+        <p className="kicker">Admin OCD</p>
+        <h1 className="display t-2">
           Connexion équipe
         </h1>
         <p className="text-sm leading-relaxed text-[var(--ink-soft)]">
-          Approuvez les réservations avant publication sur l’accueil.
+          Approuve les réservations. Elles apparaissent ensuite dans le programme.
         </p>
         <div className="field">
           <label htmlFor="admin-password">Mot de passe</label>
@@ -148,7 +148,7 @@ export function AdminPanel() {
           />
         </div>
         {loginError ? (
-          <p className="text-sm font-semibold text-[var(--accent-deep)]">
+          <p role="alert" className="notice text-sm">
             {loginError}
           </p>
         ) : null}
@@ -163,15 +163,15 @@ export function AdminPanel() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="section-kicker">Admin OCD</p>
-          <h1 className="font-display mt-3 text-[clamp(1.7rem,4vw,2.6rem)] font-extrabold tracking-[-0.035em]">
+          <p className="kicker">Admin OCD</p>
+          <h1 className="display t-2 mt-3">
             Réservations
           </h1>
           <p className="mt-2 text-sm leading-relaxed text-[var(--ink-soft)]">
-            Une réservation n’apparaît sur l’accueil qu’après approbation.
+            Une réservation approuvée apparaît dans le programme, et le vendeur reçoit son affiche et sa carte OCD.
           </p>
         </div>
-        <button type="button" className="btn btn-ghost self-start" onClick={logout}>
+        <button type="button" className="btn btn-plain btn-small self-start" onClick={logout}>
           Déconnexion
         </button>
       </div>
@@ -181,12 +181,12 @@ export function AdminPanel() {
           <button
             key={item.id}
             type="button"
-            className="rounded-full px-3 py-2 text-sm font-bold"
+            className="min-h-11 rounded-md px-3.5 text-sm font-bold"
+            aria-pressed={filter === item.id}
             style={{
-              background:
-                filter === item.id ? "var(--accent)" : "var(--surface)",
-              color: filter === item.id ? "#fff" : "var(--ink-soft)",
-              border: `1px solid ${filter === item.id ? "var(--accent)" : "var(--line)"}`,
+              background: filter === item.id ? "var(--ink)" : "var(--white)",
+              color: filter === item.id ? "var(--paper)" : "var(--ink-soft)",
+              border: `2px solid ${filter === item.id ? "var(--ink)" : "var(--line)"}`,
             }}
             onClick={() => setFilter(item.id)}
           >
@@ -196,79 +196,81 @@ export function AdminPanel() {
       </div>
 
       {actionError ? (
-        <p className="rounded-[var(--radius-sm)] bg-[var(--accent-soft)] px-3 py-2 text-sm font-semibold text-[var(--accent-deep)]">
+        <p role="alert" className="notice text-sm">
           {actionError}
         </p>
       ) : null}
 
       <div className="grid gap-3">
         {visible.length === 0 ? (
-          <div className="surface-card p-5 text-sm text-[var(--muted)]">
+          <div className="panel p-5 text-sm text-[var(--muted)]">
             Aucune réservation dans ce filtre.
           </div>
         ) : null}
 
         {visible.map((item) => (
-          <article key={item.id} className="surface-card space-y-4 p-5">
+          <article key={item.id} className="panel space-y-4 p-5">
             <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
               <div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="font-display text-xl font-bold">
+                  <h2 className="display t-3">
                     {item.businessName}
                   </h2>
                   <span
-                    className="rounded-full px-2.5 py-1 text-xs font-bold"
-                    style={{
-                      background:
-                        item.status === "confirmed"
-                          ? "var(--teal-soft)"
-                          : item.status === "pending"
-                            ? "var(--accent-soft)"
-                            : "var(--bg-deep)",
-                      color:
-                        item.status === "confirmed"
-                          ? "var(--teal)"
-                          : item.status === "pending"
-                            ? "var(--accent-deep)"
-                            : "var(--muted)",
-                    }}
+                    className={`tag ${
+                      item.status === "confirmed"
+                        ? "tag-ink"
+                        : item.status === "pending"
+                          ? "tag-accent"
+                          : "tag-line"
+                    }`}
                   >
                     {statusLabel(item.status)}
                   </span>
                 </div>
                 <p className="mt-1 text-sm text-[var(--muted)]">
-                  {item.code} · {item.contactName} · {businessLabel(item.businessType)}
+                  OCD n° {String(item.memberNo).padStart(4, "0")} · {item.code} · {item.contactName} ·{" "}
+                  {businessLabel(item.businessType).fr}
                 </p>
               </div>
-              <p className="font-display text-lg font-extrabold">
+              <p className="display text-xl">
                 {formatFcfa(item.priceFcfa)}
               </p>
             </div>
 
             <div className="grid gap-2 text-sm text-[var(--ink-soft)] md:grid-cols-2">
               <p>
-                {formatDateFr(item.date)} · {item.slotStart}–{item.slotEnd}
+                <span className="inline-block first-letter:uppercase">{formatDate(item.date)}</span> · {item.slotStart}–{item.slotEnd}
               </p>
               <p>
-                {modeLabel(item.mode)} · {item.packageName}
+                {MODE_LABELS[item.mode].fr} · {getPackage(item.packageId).name.fr} (
+                {getPackage(item.packageId).lives} live{getPackage(item.packageId).lives > 1 ? "s" : ""})
               </p>
               <p>
                 {item.city}, {item.country}
               </p>
               <p>
-                Tel {item.phone} · WhatsApp {item.whatsapp}
+                WhatsApp +{item.whatsapp}
               </p>
             </div>
 
-            <p className="rounded-[var(--radius-sm)] bg-[var(--bg-deep)] p-3 text-sm text-[var(--ink-soft)]">
+            <p className="panel-soft p-3 text-sm text-[var(--ink-soft)]">
               {item.description}
             </p>
 
             <div className="flex flex-wrap gap-2">
+              <a
+                className="btn btn-accent btn-small !shadow-[3px_3px_0_var(--ink)]"
+                href={whatsappLink(item)}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Écrire sur WhatsApp
+              </a>
               {item.status !== "confirmed" ? (
                 <button
                   type="button"
-                  className="btn btn-primary !min-h-10"
+                  className="btn btn-primary btn-small"
                   disabled={busyId === item.id}
                   onClick={() => setStatus(item.id, "confirmed")}
                 >
@@ -278,7 +280,7 @@ export function AdminPanel() {
               {item.status !== "pending" ? (
                 <button
                   type="button"
-                  className="btn btn-ghost !min-h-10"
+                  className="btn btn-plain btn-small !min-h-10"
                   disabled={busyId === item.id}
                   onClick={() => setStatus(item.id, "pending")}
                 >
@@ -288,7 +290,7 @@ export function AdminPanel() {
               {item.status !== "cancelled" ? (
                 <button
                   type="button"
-                  className="btn btn-ghost !min-h-10"
+                  className="btn btn-plain btn-small !min-h-10"
                   disabled={busyId === item.id}
                   onClick={() => setStatus(item.id, "cancelled")}
                 >

@@ -1,7 +1,13 @@
-import { NextResponse } from "next/server";
+import { connection, NextResponse } from "next/server";
+import { todayInLome } from "@/lib/slots";
 import { listAgenda } from "@/lib/store";
 
 export async function GET() {
-  const agenda = await listAgenda();
-  return NextResponse.json({ agenda });
+  // Toujours calculé à la demande : le calendrier doit être à jour.
+  await connection();
+  try {
+    return NextResponse.json({ agenda: await listAgenda(todayInLome()) });
+  } catch {
+    return NextResponse.json({ agenda: [] });
+  }
 }

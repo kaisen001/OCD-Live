@@ -1,29 +1,36 @@
 import { NextResponse } from "next/server";
-import { createReservation, listTakenSlots } from "@/lib/store";
-import { parseReservationInput } from "@/lib/validation";
-
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const date = searchParams.get("date");
-  if (!date) {
-    return NextResponse.json(
-      { error: "Paramètre date manquant." },
-      { status: 400 },
-    );
-  }
-  const taken = await listTakenSlots(date);
-  return NextResponse.json({ date, taken });
-}
+import { notifyTeam } from "@/lib/notify";
+import { createReservation, SlotTakenError, toPublic } from "@/lib/store";
+import { InputError, parseReservationInput } from "@/lib/validation";
 
 export async function POST(request: Request) {
+  let body: unknown;
   try {
-    const body = await request.json();
-    const input = parseReservationInput(body);
-    const reservation = await createReservation(input);
-    return NextResponse.json({ reservation }, { status: 201 });
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Demande invalide." }, { status: 400 });
+  }
+
+  // Piège à robots : un vrai visiteur ne remplit jamais ce champ caché.
+  if (body && typeof body === "object" && (body as Record<string, unknown>).website) {
+    return NextResponse.json({ error: "Demande invalide." }, { status: 400 });
+  }
+
+  try {
+    const reservation = await createReservation(parseReservationInput(body));
+    await notifyTeam(reservation);
+    return NextResponse.json({ reservation: toPublic(reservation) }, { status: 201 });
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Impossible de créer la réservation.";
-    return NextResponse.json({ error: message }, { status: 400 });
+    if (error instanceof InputError) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+    if (error instanceof SlotTakenError) {
+      return NextResponse.json({ error: error.message, slotTaken: true }, { status: 409 });
+    }
+    console.error("Réservation en échec", error);
+    return NextResponse.json(
+      { error: "La réservation n'a pas pu être enregistrée. Réessaie dans un instant." },
+      { status: 500 },
+    );
   }
 }

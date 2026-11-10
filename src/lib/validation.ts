@@ -1,52 +1,56 @@
-import { BUSINESS_TYPES, LIVE_MODES } from "./business";
-import { PACKAGES } from "./packages";
-import { BOOKING_OPENS_ON } from "./slots";
+import { isBusinessType } from "./business";
+import { isPackageId } from "./packages";
+import { isBookableDate, isSlotStart } from "./slots";
 import type { ReservationInput } from "./types";
 
-function required(value: unknown, label: string) {
-  if (typeof value !== "string" || !value.trim()) {
-    throw new Error(`${label} est requis.`);
-  }
-  return value.trim();
+export class InputError extends Error {}
+
+function text(value: unknown, label: string, max: number, min = 1) {
+  if (typeof value !== "string") throw new InputError(`${label} : champ manquant.`);
+  const clean = value.replace(/\s+/g, " ").trim();
+  if (clean.length < min) throw new InputError(`${label} : champ manquant.`);
+  if (clean.length > max) throw new InputError(`${label} : texte trop long.`);
+  return clean;
+}
+
+/** Garde uniquement les chiffres. "+228 90 12 34 56" -> "22890123456". */
+export function normalizePhone(value: string) {
+  return value.replace(/\D/g, "").replace(/^00/, "");
 }
 
 export function parseReservationInput(body: unknown): ReservationInput {
-  if (!body || typeof body !== "object") {
-    throw new Error("Payload invalide.");
-  }
-
+  if (!body || typeof body !== "object") throw new InputError("Demande invalide.");
   const data = body as Record<string, unknown>;
-  const mode = required(data.mode, "Mode");
-  const businessType = required(data.businessType, "Type de business");
-  const packageId = required(data.packageId, "Package");
-  const date = required(data.date, "Date");
-  const slotStart = required(data.slotStart, "Créneau");
 
-  if (!LIVE_MODES.some((item) => item.id === mode)) {
-    throw new Error("Mode de live invalide.");
+  const mode = text(data.mode, "Type de live", 20);
+  if (mode !== "presentiel" && mode !== "distance") {
+    throw new InputError("Type de live invalide.");
   }
-  if (!BUSINESS_TYPES.some((item) => item.id === businessType)) {
-    throw new Error("Type de business invalide.");
-  }
-  if (!PACKAGES.some((item) => item.id === packageId)) {
-    throw new Error("Package invalide.");
-  }
-  if (date < BOOKING_OPENS_ON) {
-    throw new Error("Les réservations ouvrent le 1er décembre 2026.");
+  const date = text(data.date, "Date", 10);
+  if (!isBookableDate(date)) throw new InputError("Cette date n'est pas ouverte.");
+  const slotStart = text(data.slotStart, "Créneau", 5);
+  if (!isSlotStart(slotStart)) throw new InputError("Créneau invalide.");
+  const packageId = text(data.packageId, "Pack", 20);
+  if (!isPackageId(packageId)) throw new InputError("Pack invalide.");
+  const businessType = text(data.businessType, "Activité", 20);
+  if (!isBusinessType(businessType)) throw new InputError("Activité invalide.");
+
+  const whatsapp = normalizePhone(text(data.whatsapp, "Numéro WhatsApp", 24));
+  if (whatsapp.length < 8 || whatsapp.length > 15) {
+    throw new InputError("Numéro WhatsApp invalide. Mets l'indicatif du pays, ex. +228 90 12 34 56.");
   }
 
   return {
-    mode: mode as ReservationInput["mode"],
-    businessType: businessType as ReservationInput["businessType"],
-    packageId: packageId as ReservationInput["packageId"],
+    mode,
     date,
     slotStart,
-    businessName: required(data.businessName, "Nom du business"),
-    contactName: required(data.contactName, "Nom du contact"),
-    phone: required(data.phone, "Téléphone"),
-    whatsapp: required(data.whatsapp, "WhatsApp"),
-    city: required(data.city, "Ville"),
-    country: required(data.country, "Pays"),
-    description: required(data.description, "Description"),
+    packageId,
+    businessType,
+    whatsapp,
+    businessName: text(data.businessName, "Nom du business", 60, 2),
+    description: text(data.description, "Ce que tu vends", 400, 3),
+    contactName: text(data.contactName, "Ton nom", 60, 2),
+    city: text(data.city, "Ville", 60, 2),
+    country: text(data.country, "Pays", 60, 2),
   };
 }

@@ -1,178 +1,327 @@
 import { promises as fs } from "fs";
+import { randomInt } from "crypto";
 import path from "path";
 import { getPackage } from "./packages";
-import { buildAdminMessage, buildPrepKit } from "./messages";
-import { addMinutes } from "./slots";
-import type { Reservation, ReservationInput, ReservationStatus } from "./types";
+import { slotEnd } from "./slots";
+import type {
+  AgendaItem,
+  PublicReservation,
+  Reservation,
+  ReservationInput,
+  ReservationStatus,
+} from "./types";
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const DATA_FILE = path.join(DATA_DIR, "reservations.json");
+export class SlotTakenError extends Error {
+  constructor() {
+    super("Ce créneau vient d'être pris. Choisis une autre heure.");
+  }
+}
 
-type StoreShape = {
-  reservations: Reservation[];
+/**
+ * Deux stockages possibles :
+ * - Supabase (production) dès que SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY existent ;
+ * - un fichier local data/reservations.json (développement uniquement).
+ */
+const SUPABASE_URL = process.env.SUPABASE_URL?.replace(/\/$/, "");
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+export const usingDatabase = Boolean(SUPABASE_URL && SUPABASE_KEY);
+
+// ---------- Commun ----------
+
+const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+function makeCode() {
+  let out = "";
+  for (let i = 0; i < 6; i += 1) out += CODE_ALPHABET[randomInt(CODE_ALPHABET.length)];
+  return `OCD-${out}`;
+}
+
+export function normalizeCode(code: string) {
+  return code.trim().toUpperCase();
+}
+
+export function toPublic(r: Reservation): PublicReservation {
+  return {
+    code: r.code,
+    memberNo: r.memberNo,
+    status: r.status,
+    mode: r.mode,
+    date: r.date,
+    slotStart: r.slotStart,
+    slotEnd: r.slotEnd,
+    packageId: r.packageId,
+    priceFcfa: r.priceFcfa,
+    businessName: r.businessName,
+    businessType: r.businessType,
+    contactName: r.contactName,
+    city: r.city,
+    country: r.country,
+  };
+}
+
+function toAgenda(r: Reservation): AgendaItem {
+  return {
+    businessName: r.businessName,
+    businessType: r.businessType,
+    mode: r.mode,
+    date: r.date,
+    slotStart: r.slotStart,
+    slotEnd: r.slotEnd,
+    city: r.city,
+    country: r.country,
+  };
+}
+
+function build(input: ReservationInput, memberNo: number): Reservation {
+  return {
+    ...input,
+    id: crypto.randomUUID(),
+    code: makeCode(),
+    memberNo,
+    slotEnd: slotEnd(input.slotStart),
+    priceFcfa: getPackage(input.packageId).priceFcfa,
+    status: "pending",
+    createdAt: new Date().toISOString(),
+  };
+}
+
+// ---------- Supabase (API REST, sans dépendance) ----------
+
+type Row = {
+  id: string;
+  code: string;
+  member_no: number;
+  status: ReservationStatus;
+  mode: Reservation["mode"];
+  date: string;
+  slot_start: string;
+  slot_end: string;
+  package_id: Reservation["packageId"];
+  price_fcfa: number;
+  business_name: string;
+  business_type: Reservation["businessType"];
+  description: string;
+  contact_name: string;
+  whatsapp: string;
+  city: string;
+  country: string;
+  created_at: string;
 };
 
+function fromRow(row: Row): Reservation {
+  return {
+    id: row.id,
+    code: row.code,
+    memberNo: row.member_no,
+    status: row.status,
+    mode: row.mode,
+    date: row.date,
+    slotStart: row.slot_start,
+    slotEnd: row.slot_end,
+    packageId: row.package_id,
+    priceFcfa: row.price_fcfa,
+    businessName: row.business_name,
+    businessType: row.business_type,
+    description: row.description,
+    contactName: row.contact_name,
+    whatsapp: row.whatsapp,
+    city: row.city,
+    country: row.country,
+    createdAt: row.created_at,
+  };
+}
+
+function toRow(r: Reservation): Row {
+  return {
+    id: r.id,
+    code: r.code,
+    member_no: r.memberNo,
+    status: r.status,
+    mode: r.mode,
+    date: r.date,
+    slot_start: r.slotStart,
+    slot_end: r.slotEnd,
+    package_id: r.packageId,
+    price_fcfa: r.priceFcfa,
+    business_name: r.businessName,
+    business_type: r.businessType,
+    description: r.description,
+    contact_name: r.contactName,
+    whatsapp: r.whatsapp,
+    city: r.city,
+    country: r.country,
+    created_at: r.createdAt,
+  };
+}
+
+async function db(query: string, init: RequestInit = {}) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/reservations${query}`, {
+    ...init,
+    cache: "no-store",
+    headers: {
+      apikey: SUPABASE_KEY as string,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+      "Content-Type": "application/json",
+      ...init.headers,
+    },
+  });
+  if (res.status === 409) throw new SlotTakenError();
+  if (!res.ok) {
+    console.error("Supabase", res.status, await res.text());
+    throw new Error("La base de données ne répond pas. Réessaie dans un instant.");
+  }
+  return res.status === 204 ? [] : ((await res.json()) as Row[]);
+}
+
+const q = encodeURIComponent;
+
+// ---------- Fichier local (développement) ----------
+
+const DATA_FILE = path.join(process.cwd(), "data", "reservations.json");
+
 declare global {
-  // eslint-disable-next-line no-var
-  var __ocdStore: StoreShape | undefined;
+  var __ocdReservations: Reservation[] | undefined;
 }
 
-function memoryStore() {
-  if (!globalThis.__ocdStore) {
-    globalThis.__ocdStore = { reservations: [] };
+async function readLocal(): Promise<Reservation[]> {
+  if (!globalThis.__ocdReservations) {
+    try {
+      const raw = JSON.parse(await fs.readFile(DATA_FILE, "utf8"));
+      globalThis.__ocdReservations = Array.isArray(raw) ? raw : [];
+    } catch {
+      globalThis.__ocdReservations = [];
+    }
   }
-  return globalThis.__ocdStore;
+  return globalThis.__ocdReservations;
 }
 
-async function readStore(): Promise<StoreShape> {
+async function writeLocal(list: Reservation[]) {
+  globalThis.__ocdReservations = list;
   try {
-    const raw = await fs.readFile(DATA_FILE, "utf8");
-    const parsed = JSON.parse(raw) as StoreShape;
-    memoryStore().reservations = parsed.reservations ?? [];
-    return memoryStore();
+    await fs.mkdir(path.dirname(DATA_FILE), { recursive: true });
+    await fs.writeFile(DATA_FILE, JSON.stringify(list, null, 2), "utf8");
   } catch {
-    return memoryStore();
+    // Disque en lecture seule : on garde la mémoire du processus.
   }
 }
 
-async function writeStore(store: StoreShape) {
-  memoryStore().reservations = store.reservations;
-  try {
-    await fs.mkdir(DATA_DIR, { recursive: true });
-    await fs.writeFile(DATA_FILE, JSON.stringify(store, null, 2), "utf8");
-  } catch {
-    // Vercel / read-only FS: keep in-memory for the process lifetime.
-  }
-}
+// ---------- API du stockage ----------
 
-function makeCode(date: string) {
-  const stamp = date.replaceAll("-", "");
-  const rand = Math.random().toString(36).slice(2, 6).toUpperCase();
-  return `OCD-${stamp}-${rand}`;
+/** Un vendeur garde son numéro de membre : il est lié à son WhatsApp. */
+async function memberNoFor(whatsapp: string) {
+  if (usingDatabase) {
+    const known = await db(`?select=member_no&whatsapp=eq.${q(whatsapp)}&limit=1`);
+    if (known[0]) return known[0].member_no;
+    const top = await db("?select=member_no&order=member_no.desc&limit=1");
+    return (top[0]?.member_no ?? 0) + 1;
+  }
+  const list = await readLocal();
+  const known = list.find((item) => item.whatsapp === whatsapp);
+  if (known) return known.memberNo;
+  return list.reduce((max, item) => Math.max(max, item.memberNo), 0) + 1;
 }
 
 export async function createReservation(input: ReservationInput) {
-  const store = await readStore();
-  const pack = getPackage(input.packageId);
-  const slotEnd = addMinutes(input.slotStart, pack.durationMin);
+  const reservation = build(input, await memberNoFor(input.whatsapp));
 
-  const overlap = store.reservations.find(
+  if (usingDatabase) {
+    const rows = await db("", {
+      method: "POST",
+      headers: { Prefer: "return=representation" },
+      body: JSON.stringify(toRow(reservation)),
+    });
+    return fromRow(rows[0]);
+  }
+
+  const list = await readLocal();
+  const taken = list.some(
     (item) =>
       item.status !== "cancelled" &&
       item.date === input.date &&
       item.slotStart === input.slotStart,
   );
-  if (overlap) {
-    throw new Error("Ce créneau vient d’être pris. Choisissez un autre horaire.");
-  }
-
-  const code = makeCode(input.date);
-  const reservation: Reservation = {
-    ...input,
-    id: crypto.randomUUID(),
-    code,
-    slotEnd,
-    priceFcfa: pack.priceFcfa,
-    packageName: pack.name,
-    status: "pending",
-    createdAt: new Date().toISOString(),
-    adminMessage: buildAdminMessage(input, code, slotEnd),
-    prepKit: buildPrepKit(input, slotEnd),
-  };
-
-  store.reservations.unshift(reservation);
-  await writeStore(store);
-
-  if (process.env.ADMIN_WEBHOOK_URL) {
-    try {
-      await fetch(process.env.ADMIN_WEBHOOK_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          text: reservation.adminMessage,
-          reservation,
-        }),
-      });
-    } catch (error) {
-      console.error("Admin webhook failed", error);
-    }
-  } else {
-    console.info("\n===== NOTIF ADMIN OCD =====\n" + reservation.adminMessage + "\n");
-  }
-
+  if (taken) throw new SlotTakenError();
+  await writeLocal([reservation, ...list]);
   return reservation;
 }
 
 export async function getReservationByCode(code: string) {
-  const store = await readStore();
-  return (
-    store.reservations.find(
-      (item) => item.code.toLowerCase() === code.trim().toLowerCase(),
-    ) ?? null
-  );
+  const clean = normalizeCode(code);
+  if (!/^OCD-[A-Z0-9]{4,12}$/.test(clean)) return null;
+  if (usingDatabase) {
+    const rows = await db(`?select=*&code=eq.${q(clean)}&limit=1`);
+    return rows[0] ? fromRow(rows[0]) : null;
+  }
+  return (await readLocal()).find((item) => item.code === clean) ?? null;
 }
 
-export async function listAgenda() {
-  const store = await readStore();
-  return store.reservations
-    .filter((item) => item.status === "confirmed")
+/** Créneaux déjà pris, jour par jour, entre deux dates incluses. */
+export async function listTakenSlots(from: string, to: string) {
+  const taken: Record<string, string[]> = {};
+  const add = (date: string, slot: string) => {
+    (taken[date] ??= []).push(slot);
+  };
+  if (usingDatabase) {
+    const rows = await db(
+      `?select=date,slot_start&status=neq.cancelled&date=gte.${q(from)}&date=lte.${q(to)}`,
+    );
+    rows.forEach((row) => add(row.date, row.slot_start));
+  } else {
+    (await readLocal())
+      .filter((item) => item.status !== "cancelled" && item.date >= from && item.date <= to)
+      .forEach((item) => add(item.date, item.slotStart));
+  }
+  return taken;
+}
+
+/** Programme public : uniquement les lives approuvés, à partir d'aujourd'hui. */
+export async function listAgenda(fromDate: string, limit = 8): Promise<AgendaItem[]> {
+  if (usingDatabase) {
+    const rows = await db(
+      `?select=*&status=eq.confirmed&date=gte.${q(fromDate)}&order=date.asc,slot_start.asc&limit=${limit}`,
+    );
+    return rows.map(fromRow).map(toAgenda);
+  }
+  return (await readLocal())
+    .filter((item) => item.status === "confirmed" && item.date >= fromDate)
     .sort((a, b) => `${a.date}${a.slotStart}`.localeCompare(`${b.date}${b.slotStart}`))
-    .map((item) => ({
-      code: item.code,
-      businessName: item.businessName,
-      businessType: item.businessType,
-      mode: item.mode,
-      date: item.date,
-      slotStart: item.slotStart,
-      slotEnd: item.slotEnd,
-      city: item.city,
-      country: item.country,
-      packageName: item.packageName,
-      status: item.status,
-    }));
-}
-
-export async function listTakenSlots(date: string) {
-  const store = await readStore();
-  return store.reservations
-    .filter((item) => item.date === date && item.status !== "cancelled")
-    .map((item) => item.slotStart);
+    .slice(0, limit)
+    .map(toAgenda);
 }
 
 export async function listAllReservations() {
-  const store = await readStore();
-  return [...store.reservations].sort((a, b) =>
-    b.createdAt.localeCompare(a.createdAt),
-  );
+  if (usingDatabase) {
+    return (await db("?select=*&order=created_at.desc&limit=1000")).map(fromRow);
+  }
+  return [...(await readLocal())].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
-export async function updateReservationStatus(
-  id: string,
-  status: ReservationStatus,
-) {
-  const store = await readStore();
-  const index = store.reservations.findIndex((item) => item.id === id);
-  if (index < 0) {
-    throw new Error("Réservation introuvable.");
+export async function updateReservationStatus(id: string, status: ReservationStatus) {
+  if (usingDatabase) {
+    if (!/^[0-9a-f-]{36}$/i.test(id)) throw new Error("Réservation introuvable.");
+    const rows = await db(`?id=eq.${q(id)}`, {
+      method: "PATCH",
+      headers: { Prefer: "return=representation" },
+      body: JSON.stringify({ status }),
+    });
+    if (!rows[0]) throw new Error("Réservation introuvable.");
+    return fromRow(rows[0]);
   }
 
-  const current = store.reservations[index];
-  if (status === "confirmed" || status === "pending") {
-    const conflict = store.reservations.find(
+  const list = await readLocal();
+  const current = list.find((item) => item.id === id);
+  if (!current) throw new Error("Réservation introuvable.");
+  if (status !== "cancelled") {
+    const conflict = list.some(
       (item) =>
         item.id !== id &&
         item.status !== "cancelled" &&
         item.date === current.date &&
         item.slotStart === current.slotStart,
     );
-    if (conflict) {
-      throw new Error(
-        `Créneau déjà pris par ${conflict.businessName} (${conflict.code}).`,
-      );
-    }
+    if (conflict) throw new SlotTakenError();
   }
-
-  store.reservations[index] = { ...current, status };
-  await writeStore(store);
-  return store.reservations[index];
+  const updated = { ...current, status };
+  await writeLocal(list.map((item) => (item.id === id ? updated : item)));
+  return updated;
 }

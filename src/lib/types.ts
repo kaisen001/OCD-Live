@@ -1,3 +1,6 @@
+export type Lang = "fr" | "en";
+export type Bi = { fr: string; en: string };
+
 export type LiveMode = "presentiel" | "distance";
 
 export type BusinessType =
@@ -5,53 +8,84 @@ export type BusinessType =
   | "mode"
   | "beaute"
   | "tech"
+  | "maison"
+  | "agriculture"
   | "artisanat"
   | "services"
+  | "formation"
   | "autre";
 
 export type PackageId =
   | "decouverte"
-  | "business"
-  | "visibilite"
-  | "immersion"
-  | "vip"
-  | "partenaire";
+  | "duo"
+  | "pack4"
+  | "semaine"
+  | "pack8"
+  | "mensuel";
 
 export type ReservationStatus = "pending" | "confirmed" | "cancelled";
 
 export type LivePackage = {
   id: PackageId;
-  name: string;
-  tagline: string;
+  name: Bi;
+  lives: number;
   priceFcfa: number;
-  durationMin: number;
-  highlights: string[];
-  badge?: string;
+  summary: Bi;
+  includes: Bi[];
+  featured?: boolean;
 };
 
 export type ReservationInput = {
   mode: LiveMode;
-  businessType: BusinessType;
-  packageId: PackageId;
   date: string;
   slotStart: string;
+  packageId: PackageId;
   businessName: string;
+  businessType: BusinessType;
+  description: string;
   contactName: string;
-  phone: string;
   whatsapp: string;
   city: string;
   country: string;
-  description: string;
 };
 
 export type Reservation = ReservationInput & {
   id: string;
   code: string;
+  memberNo: number;
   slotEnd: string;
   priceFcfa: number;
-  packageName: string;
   status: ReservationStatus;
   createdAt: string;
-  adminMessage: string;
-  prepKit: string;
 };
+
+/** What a seller (or anyone holding the code) may see. No phone number. */
+export type PublicReservation = Pick<
+  Reservation,
+  | "code"
+  | "memberNo"
+  | "status"
+  | "mode"
+  | "date"
+  | "slotStart"
+  | "slotEnd"
+  | "packageId"
+  | "priceFcfa"
+  | "businessName"
+  | "businessType"
+  | "contactName"
+  | "city"
+  | "country"
+>;
+
+export type AgendaItem = Pick<
+  Reservation,
+  | "businessName"
+  | "businessType"
+  | "mode"
+  | "date"
+  | "slotStart"
+  | "slotEnd"
+  | "city"
+  | "country"
+>;
