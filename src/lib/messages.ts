@@ -3,14 +3,14 @@ import { durationLabel, formatFcfa, getPackage } from "./packages";
 import { formatDate } from "./slots";
 import type { Reservation } from "./types";
 
-/** Le message que l'équipe reçoit à chaque réservation. */
+/** Le message que l'équipe reçoit à chaque réservation (toujours en français, heure Lomé). */
 export function buildTeamMessage(r: Reservation) {
   const pack = getPackage(r.packageId);
   return {
-    subject: `Nouvelle réservation : ${r.businessName}, ${formatDate(r.date)} ${r.slotStart}–${r.slotEnd}`,
+    subject: `Nouvelle réservation : ${r.businessName}, ${formatDate(r.date)} ${r.slotStart}–${r.slotEnd} (Lomé)`,
     lines: [
       `${r.contactName} fait « ${businessLabel(r.businessType).fr} » (${r.businessName}).`,
-      `A réservé le ${formatDate(r.date)} de ${r.slotStart} à ${r.slotEnd}, heure de Lomé.`,
+      `A réservé le ${formatDate(r.date)} de ${r.slotStart} à ${r.slotEnd}, heure de Lomé (GMT).`,
       r.mode === "presentiel"
         ? "Va venir au studio, à Lomé."
         : `Sera à distance, depuis ${r.city}, ${r.country}.`,

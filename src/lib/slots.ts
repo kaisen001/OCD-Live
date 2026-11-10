@@ -1,3 +1,4 @@
+import { intlLocale } from "./locales";
 import { LIVE_MINUTES } from "./packages";
 import type { Lang } from "./types";
 
@@ -98,10 +99,14 @@ export function calendarMonths(now = new Date()): CalendarMonth[] {
   return months;
 }
 
-const LOCALES: Record<Lang, string> = { fr: "fr-FR", en: "en-GB" };
+const LANG_LOCALES: Record<Lang, string> = { fr: "fr-FR", en: "en-GB" };
 
-export function formatDate(isoDate: string, lang: Lang = "fr") {
-  return new Intl.DateTimeFormat(LOCALES[lang], {
+export function formatDate(isoDate: string, langOrLocale: Lang | string = "fr") {
+  const tag =
+    langOrLocale === "fr" || langOrLocale === "en"
+      ? LANG_LOCALES[langOrLocale]
+      : intlLocale(langOrLocale);
+  return new Intl.DateTimeFormat(tag, {
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -110,7 +115,7 @@ export function formatDate(isoDate: string, lang: Lang = "fr") {
 }
 
 export function formatMonth(year: number, month: number, lang: Lang = "fr") {
-  return new Intl.DateTimeFormat(LOCALES[lang], {
+  return new Intl.DateTimeFormat(LANG_LOCALES[lang], {
     month: "long",
     year: "numeric",
     timeZone: "UTC",
@@ -123,21 +128,4 @@ export function weekdayInitials(lang: Lang = "fr") {
     : ["M", "T", "W", "T", "F", "S", "S"];
 }
 
-/**
- * Heure du visiteur pour un créneau donné à l'heure de Lomé.
- * Renvoie null si le visiteur est à la même heure que Lomé.
- */
-export function localTimeFor(date: string, time: string, timeZone: string) {
-  try {
-    const instant = new Date(`${date}T${time}:00Z`);
-    const local = new Intl.DateTimeFormat("fr-FR", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-      timeZone,
-    }).format(instant);
-    return local === time ? null : local;
-  } catch {
-    return null;
-  }
-}
+export { localTimeFor, STUDIO_TZ, formatSlotRange, slotDisplayLine } from "./time";

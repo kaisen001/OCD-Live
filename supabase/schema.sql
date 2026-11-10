@@ -42,3 +42,9 @@ create index if not exists booked_slots_reservation_idx on public.booked_slots (
 -- y accède, avec la clé secrète (service role), qui ignore ces règles.
 alter table public.reservations enable row level security;
 alter table public.booked_slots enable row level security;
+
+grant usage on schema public to postgres, anon, authenticated, service_role;
+grant all on table public.reservations to postgres, service_role;
+grant all on table public.booked_slots to postgres, service_role;
+revoke all on table public.reservations from anon, authenticated;
+revoke all on table public.booked_slots from anon, authenticated;

@@ -27,20 +27,21 @@ export const viewport: Viewport = {
 };
 
 /** Choisit la langue avant le premier affichage : pas de clignotement. */
-const langScript = `try{var l=localStorage.getItem("ocd-lang");if(l!=="fr"&&l!=="en"){l=(navigator.language||"fr").toLowerCase().indexOf("en")===0?"en":"fr"}var d=document.documentElement;d.dataset.lang=l;d.lang=l}catch(e){}`;
+const langScript = `try{var loc=localStorage.getItem("ocd-locale")||"";var map={fr:"fr",en:"en",ee:"fr",fon:"fr",wo:"fr",bm:"fr",mos:"fr",ha:"fr",yo:"en",ig:"en",sw:"en",ln:"fr",ar:"fr",am:"en",zu:"en",pt:"en"};var ui=map[loc]||localStorage.getItem("ocd-lang");if(ui!=="fr"&&ui!=="en"){ui=(navigator.language||"fr").toLowerCase().indexOf("en")===0?"en":"fr"}if(!loc||!map[loc])loc=ui;var d=document.documentElement;d.dataset.lang=ui;d.dataset.locale=loc;d.lang=loc==="ar"?"ar":ui;d.dir=loc==="ar"?"rtl":"ltr"}catch(e){}`;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="fr"
       data-lang="fr"
+      data-scroll-behavior="smooth"
       className={text.variable}
       suppressHydrationWarning
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: langScript }} />
       </head>
-      <body className="flex min-h-dvh flex-col antialiased">
+      <body className="flex min-h-dvh flex-col antialiased" suppressHydrationWarning>
         <SiteHeader />
         <main className="flex-1">{children}</main>
         <SiteFooter />

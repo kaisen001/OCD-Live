@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { BUSINESS_TYPES, MODE_LABELS } from "@/lib/business";
+import { BUSINESS_TYPES, bizKey, modeKey } from "@/lib/business";
 import { PACKAGES, durationLabel, getPackage } from "@/lib/packages";
 import {
   SLOT_STARTS,
@@ -15,9 +15,10 @@ import {
   weekdayInitials,
 } from "@/lib/slots";
 import type { BusinessType, LiveMode, PackageId } from "@/lib/types";
-import { useLang, useVisitor } from "@/lib/use-visitor";
+import { useLang, useLocaleId, useVisitor } from "@/lib/use-visitor";
 import { Price } from "./price";
-import { T } from "./t";
+import { T, useT } from "./t";
+import type { MessageKey } from "@/lib/i18n";
 
 type Form = {
   mode: LiveMode | null;
@@ -51,17 +52,32 @@ const EMPTY: Form = {
   website: "",
 };
 
-const STEP_TITLES = [
-  { fr: "Où veux-tu faire ton live ?", en: "Where do you want to go live?" },
-  { fr: "Quel jour, à quelle heure ?", en: "Which day, what time?" },
-  { fr: "Quel package ?", en: "Which package?" },
-  { fr: "Parle-nous de ton business.", en: "Tell us about your business." },
-];
+const STEP_KEYS: MessageKey[] = ["book.step1", "book.step2", "book.step3", "book.step4"];
+
+const PACK_NAME: Record<PackageId, MessageKey> = {
+  simple: "pack.simple.name",
+  plus: "pack.plus.name",
+  demi: "pack.demi.name",
+  journee: "pack.journee.name",
+  vedette: "pack.vedette.name",
+  mois: "pack.mois.name",
+};
+
+const PACK_SUMMARY: Record<PackageId, MessageKey> = {
+  simple: "pack.simple.summary",
+  plus: "pack.plus.summary",
+  demi: "pack.demi.summary",
+  journee: "pack.journee.summary",
+  vedette: "pack.vedette.summary",
+  mois: "pack.mois.summary",
+};
 
 export function BookingWizard() {
   const router = useRouter();
   const params = useSearchParams();
   const lang = useLang();
+  const localeId = useLocaleId();
+  const t = useT();
   const visitor = useVisitor();
   const top = useRef<HTMLDivElement>(null);
 
@@ -136,23 +152,14 @@ export function BookingWizard() {
         setForm((prev) => ({ ...prev, slotStart: "" }));
         loadTaken();
         setStep(1);
-        setError(
-          lang === "fr"
-            ? "Ce créneau vient d'être pris par un autre vendeur. Choisis une autre heure."
-            : "Another seller just took this slot. Pick another time.",
-        );
+        setError(t("book.slotTaken"));
         setSending(false);
         return;
       }
       if (!res.ok) throw new Error(data.error);
       router.replace(`/suivi?code=${encodeURIComponent(data.reservation.code)}&nouveau=1`);
     } catch (err) {
-      setError(
-        (err instanceof Error && err.message) ||
-          (lang === "fr"
-            ? "La réservation n'est pas partie. Vérifie ta connexion et réessaie."
-            : "The booking did not go through. Check your connection and try again."),
-      );
+      setError((err instanceof Error && err.message) || t("book.fail"));
       setSending(false);
     }
   }
@@ -161,21 +168,21 @@ export function BookingWizard() {
     <div ref={top} className="mx-auto max-w-2xl scroll-mt-20">
       {/* Progression */}
       <div className="flex items-center gap-2" aria-hidden>
-        {STEP_TITLES.map((_, index) => (
+        {STEP_KEYS.map((key) => (
           <span
-            key={index}
+            key={key}
             className="h-2.5 flex-1 rounded-full"
             style={{
-              background: index <= step ? "var(--main)" : "var(--line)",
+              background: STEP_KEYS.indexOf(key) <= step ? "var(--main)" : "var(--line)",
             }}
           />
         ))}
       </div>
       <p className="mt-4 text-sm font-bold uppercase tracking-wider text-[var(--muted)]">
-        <T fr={`Étape ${step + 1} sur 4`} en={`Step ${step + 1} of 4`} />
+        {step + 1} / 4
       </p>
       <h1 className="display t-2 mt-2">
-        <T fr={STEP_TITLES[step].fr} en={STEP_TITLES[step].en} />
+        <T k={STEP_KEYS[step]} />
       </h1>
 
       {error ? (
@@ -194,13 +201,10 @@ export function BookingWizard() {
             onClick={() => set("mode", "presentiel")}
           >
             <span className="display t-3">
-              <T fr="En présentiel, à Lomé (Togo)" en="In person, in Lomé (Togo)" />
+              <T k="book.modeStudio" />
             </span>
             <span>
-              <T
-                fr="Tu viens avec tes produits. La régie dirige le live."
-                en="You come with your products. The control room runs the live."
-              />
+              <T k="book.modeStudioSub" />
             </span>
           </button>
           <button
@@ -210,13 +214,10 @@ export function BookingWizard() {
             onClick={() => set("mode", "distance")}
           >
             <span className="display t-3">
-              <T fr="À distance" en="Remote" />
+              <T k="book.modeRemote" />
             </span>
             <span>
-              <T
-                fr="Tu restes chez toi ou dans ta boutique, dans n'importe quel pays. Une assistante OCD te suit."
-                en="You stay at home or in your shop, in any country. An OCD assistant is with you."
-              />
+              <T k="book.modeRemoteSub" />
             </span>
           </button>
         </div>
@@ -232,7 +233,7 @@ export function BookingWizard() {
                 className="btn btn-plain btn-small !min-w-11 !px-0"
                 disabled={monthIndex === 0}
                 onClick={() => setMonthIndex((i) => i - 1)}
-                aria-label={lang === "fr" ? "Mois précédent" : "Previous month"}
+                aria-label={t("book.prevMonth")}
               >
                 ←
               </button>
@@ -242,7 +243,7 @@ export function BookingWizard() {
                 className="btn btn-plain btn-small !min-w-11 !px-0"
                 disabled={monthIndex === months.length - 1}
                 onClick={() => setMonthIndex((i) => i + 1)}
-                aria-label={lang === "fr" ? "Mois suivant" : "Next month"}
+                aria-label={t("book.nextMonth")}
               >
                 →
               </button>
@@ -263,7 +264,7 @@ export function BookingWizard() {
                     className="day"
                     disabled={!day.open || full}
                     aria-pressed={form.date === day.date}
-                    aria-label={formatDate(day.date, lang)}
+                    aria-label={formatDate(day.date, localeId)}
                     onClick={() => setForm((prev) => ({ ...prev, date: day.date, slotStart: "" }))}
                   >
                     {day.day}
@@ -272,33 +273,27 @@ export function BookingWizard() {
               })}
             </div>
             <p className="mt-3 text-sm text-[var(--muted)]">
-              <T
-                fr="Les lives commencent le 1er décembre 2026."
-                en="Lives start on 1 December 2026."
-              />
+              <T k="book.opens" />
+            </p>
+            <p className="mt-1 text-sm text-[var(--muted)]">
+              <T k="time.legend" />
             </p>
           </div>
 
           {calendarDown ? (
             <p className="notice mt-5">
-              <T
-                fr="Le calendrier ne charge pas. Vérifie ta connexion."
-                en="The calendar is not loading. Check your connection."
-              />{" "}
+              <T k="book.calDown" />{" "}
               <button type="button" className="link" onClick={loadTaken}>
-                <T fr="Réessayer" en="Try again" />
+                <T k="book.retry" />
               </button>
             </p>
           ) : null}
 
           {form.date ? (
             <div className="mt-7">
-              <h2 className="display t-3 first-letter:uppercase">{formatDate(form.date, lang)}</h2>
+              <h2 className="display t-3 first-letter:uppercase">{formatDate(form.date, localeId)}</h2>
               <p className="mt-1 text-sm text-[var(--muted)]">
-                <T
-                  fr="Heure de Lomé (GMT). Chaque live dure 1 h 30."
-                  en="Lomé time (GMT). Each live lasts 1.5 hours."
-                />
+                <T k="time.lomeGmt" />
               </p>
               <div className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
                 {SLOT_STARTS.map((start) => {
@@ -316,9 +311,9 @@ export function BookingWizard() {
                       {start}
                       <small>
                         {isTaken ? (
-                          <T fr="pris" en="taken" />
+                          <T k="book.taken" />
                         ) : local ? (
-                          <T fr={`${local} chez toi`} en={`${local} your time`} />
+                          t("book.localHint", { time: local })
                         ) : (
                           <>→ {slotEnd(start)}</>
                         )}
@@ -349,7 +344,7 @@ export function BookingWizard() {
               >
                 <span className="flex flex-wrap items-baseline justify-between gap-x-4">
                   <span className="display t-3">
-                    <T fr={item.name.fr} en={item.name.en} />
+                    <T k={PACK_NAME[item.id]} />
                   </span>
                   <Price amount={item.priceFcfa} className="display t-3" />
                 </span>
@@ -364,12 +359,9 @@ export function BookingWizard() {
                 </span>
                 <span className="text-[0.97rem]">
                   {ok ? (
-                    <T fr={item.summary.fr} en={item.summary.en} />
+                    <T k={PACK_SUMMARY[item.id]} />
                   ) : (
-                    <T
-                      fr={`Il faut ${item.slots} créneaux libres de suite à partir de ${form.slotStart}. Choisis une heure plus tôt.`}
-                      en={`This needs ${item.slots} free slots in a row from ${form.slotStart}. Pick an earlier time.`}
-                    />
+                    t("book.needsSlots", { n: item.slots, start: form.slotStart })
                   )}
                 </span>
               </button>
@@ -377,10 +369,11 @@ export function BookingWizard() {
           })}
           {pack && pack.lives > 1 ? (
             <p className="notice">
-              <T
-                fr={`Ton premier live : ${formatDate(form.date, "fr")} à ${form.slotStart}. Tu choisis les ${pack.lives - 1} autres avec l'équipe, sur WhatsApp.`}
-                en={`Your first live: ${formatDate(form.date, "en")} at ${form.slotStart}. You pick the other ${pack.lives - 1} with the team, on WhatsApp.`}
-              />
+              {t("book.multiLive", {
+                date: formatDate(form.date, localeId),
+                start: form.slotStart,
+                n: pack.lives - 1,
+              })}
             </p>
           ) : null}
         </div>
@@ -397,7 +390,7 @@ export function BookingWizard() {
         >
           <div className="field">
             <label htmlFor="businessName">
-              <T fr="Nom de ton business" en="Your business name" />
+              <T k="book.bizName" />
             </label>
             <input
               id="businessName"
@@ -405,13 +398,13 @@ export function BookingWizard() {
               maxLength={60}
               autoComplete="organization"
               onChange={(e) => set("businessName", e.target.value)}
-              placeholder={lang === "fr" ? "Ex. Chez Amina Couture" : "E.g. Amina Tailoring"}
+              placeholder={t("book.bizNamePh")}
               required
             />
           </div>
           <div className="field">
             <label htmlFor="businessType">
-              <T fr="Ton activité" en="What you do" />
+              <T k="book.bizType" />
             </label>
             <select
               id="businessType"
@@ -419,34 +412,30 @@ export function BookingWizard() {
               onChange={(e) => set("businessType", e.target.value as BusinessType)}
               required
             >
-              <option value="">{lang === "fr" ? "Choisir" : "Choose"}</option>
+              <option value="">{t("book.bizTypeChoose")}</option>
               {BUSINESS_TYPES.map((item) => (
                 <option key={item.id} value={item.id}>
-                  {item.label[lang]}
+                  {t(bizKey(item.id))}
                 </option>
               ))}
             </select>
           </div>
           <div className="field">
             <label htmlFor="description">
-              <T fr="Qu'est-ce que tu vends ?" en="What do you sell?" />
+              <T k="book.desc" />
             </label>
             <textarea
               id="description"
               value={form.description}
               maxLength={400}
               onChange={(e) => set("description", e.target.value)}
-              placeholder={
-                lang === "fr"
-                  ? "Ex. Robes en pagne sur mesure, de 8 000 à 25 000 FCFA. Livraison à Lomé."
-                  : "E.g. Made-to-measure wax dresses, 8,000 to 25,000 FCFA. Delivery in Lomé."
-              }
+              placeholder={t("book.descPh")}
               required
             />
           </div>
           <div className="field">
             <label htmlFor="contactName">
-              <T fr="Ton nom" en="Your name" />
+              <T k="book.contact" />
             </label>
             <input
               id="contactName"
@@ -459,7 +448,7 @@ export function BookingWizard() {
           </div>
           <div className="field">
             <label htmlFor="whatsapp">
-              <T fr="Ton numéro WhatsApp" en="Your WhatsApp number" />
+              <T k="book.whatsapp" />
             </label>
             <input
               id="whatsapp"
@@ -469,19 +458,16 @@ export function BookingWizard() {
               maxLength={24}
               autoComplete="tel"
               onChange={(e) => set("whatsapp", e.target.value)}
-              placeholder="+228 90 12 34 56"
+              placeholder={t("book.whatsappPh")}
               required
             />
             <span className="hint">
-              <T
-                fr="Avec l'indicatif du pays. L'équipe t'écrit sur ce numéro pour confirmer."
-                en="With the country code. The team writes to this number to confirm."
-              />
+              <T k="book.whatsappHint" />
             </span>
           </div>
           <div className="field">
             <label htmlFor="address">
-              <T fr="Adresse de ta boutique (facultatif)" en="Your shop address (optional)" />
+              <T k="book.address" />
             </label>
             <input
               id="address"
@@ -489,19 +475,16 @@ export function BookingWizard() {
               maxLength={120}
               autoComplete="street-address"
               onChange={(e) => set("address", e.target.value)}
-              placeholder={lang === "fr" ? "Ex. Marché de Hédzranawoé, hangar 4" : "E.g. Hédzranawoé market, shed 4"}
+              placeholder={t("book.addressPh")}
             />
             <span className="hint">
-              <T
-                fr="On l'affiche pendant ton live, avec ton numéro."
-                en="We show it during your live, with your number."
-              />
+              <T k="book.addressHint" />
             </span>
           </div>
           <div className="grid gap-5 sm:grid-cols-2">
             <div className="field">
               <label htmlFor="city">
-                <T fr="Ville" en="City" />
+                <T k="book.city" />
               </label>
               <input
                 id="city"
@@ -514,7 +497,7 @@ export function BookingWizard() {
             </div>
             <div className="field">
               <label htmlFor="country">
-                <T fr="Pays" en="Country" />
+                <T k="book.country" />
               </label>
               <input
                 id="country"
@@ -545,10 +528,7 @@ export function BookingWizard() {
 
       {step === 3 ? (
         <p className="mt-6 text-sm text-[var(--muted)]">
-          <T
-          fr="Tu ne paies rien maintenant. L'équipe te contacte sur WhatsApp pour confirmer et régler."
-          en="You pay nothing now. The team contacts you on WhatsApp to confirm and settle payment."
-          />
+          <T k="book.payLater" />
         </p>
       ) : null}
 
@@ -556,17 +536,18 @@ export function BookingWizard() {
       <div className="sticky bottom-0 z-30 -mx-5 mt-8 border-t border-[var(--line)] bg-white px-5 py-3 sm:static sm:mx-0 sm:border-0 sm:px-0">
         {form.mode ? (
           <p className="mb-3 text-sm font-semibold text-[var(--ink-soft)]">
-            {MODE_LABELS[form.mode][lang]}
+            {t(modeKey(form.mode))}
             {form.date && form.slotStart ? (
               <>
                 {" · "}
-                <span className="inline-block first-letter:uppercase">{formatDate(form.date, lang)}</span> {form.slotStart}
+                <span className="inline-block first-letter:uppercase">{formatDate(form.date, localeId)}</span>{" "}
+                {form.slotStart}
               </>
             ) : null}
             {pack ? (
               <>
                 {" · "}
-                {pack.name[lang]} <Price amount={pack.priceFcfa} />
+                {t(PACK_NAME[pack.id])} <Price amount={pack.priceFcfa} />
               </>
             ) : null}
           </p>
@@ -574,20 +555,19 @@ export function BookingWizard() {
         <div className="flex gap-3">
           {step > 0 ? (
             <button type="button" className="btn btn-plain" onClick={() => go(step - 1)} disabled={sending}>
-              <T fr="Retour" en="Back" />
+              <T k="book.back" />
             </button>
           ) : null}
           {step < 3 ? (
             <button type="button" className="btn btn-primary flex-1" disabled={!ready} onClick={() => go(step + 1)}>
-              <T fr="Continuer" en="Continue" />
+              <T k="book.next" />
             </button>
           ) : (
             <button type="button" className="btn btn-primary flex-1" disabled={!ready || sending} onClick={submit}>
-              {sending ? <T fr="Envoi…" en="Sending…" /> : <T fr="Envoyer ma réservation" en="Send my booking" />}
+              {sending ? <T k="book.sending" /> : <T k="book.submit" />}
             </button>
           )}
         </div>
-
       </div>
     </div>
   );

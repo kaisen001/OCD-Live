@@ -1,20 +1,30 @@
 "use client";
 
-import { setLang, useLang } from "@/lib/use-visitor";
+import { LOCALES } from "@/lib/locales";
+import { setLocale, useLang, useLocaleId } from "@/lib/use-visitor";
+import { FlagDropdown } from "./flag-dropdown";
+import { useT } from "./t";
 
+/** Dropdown langues africaines + drapeaux des pays. */
 export function LangToggle() {
+  const localeId = useLocaleId();
   const lang = useLang();
-  const next = lang === "fr" ? "en" : "fr";
+  const t = useT();
+  const current = LOCALES.find((item) => item.id === localeId) ?? LOCALES[0];
+
   return (
-    <button
-      type="button"
-      onClick={() => setLang(next)}
-      className="min-h-11 rounded-[10px] border border-[var(--line)] px-3 text-sm font-bold uppercase tracking-wide hover:border-[var(--ink)]"
-      aria-label={lang === "fr" ? "Switch to English" : "Passer en français"}
-    >
-      <span className={lang === "fr" ? "" : "opacity-40"}>FR</span>
-      <span className="mx-1 opacity-40">/</span>
-      <span className={lang === "en" ? "" : "opacity-40"}>EN</span>
-    </button>
+    <FlagDropdown
+      label={t("nav.lang")}
+      value={current.id}
+      buttonText={current.id.length <= 3 ? current.id : current.id.slice(0, 2)}
+      header={t("nav.langHeader")}
+      items={LOCALES.map((item) => ({
+        id: item.id,
+        flag: item.flag,
+        title: item.native,
+        subtitle: `${item.country[lang]} · ${lang === "fr" ? item.fr : item.en}`,
+      }))}
+      onChange={setLocale}
+    />
   );
 }

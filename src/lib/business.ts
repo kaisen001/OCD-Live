@@ -1,5 +1,25 @@
+import type { MessageKey } from "@/lib/i18n/messages/fr";
 import type { Bi, BusinessType, LiveMode } from "./types";
 
+export const BIZ_KEYS: Record<BusinessType, MessageKey> = {
+  mode: "biz.mode",
+  beaute: "biz.beaute",
+  restauration: "biz.restauration",
+  tech: "biz.tech",
+  maison: "biz.maison",
+  agriculture: "biz.agriculture",
+  artisanat: "biz.artisanat",
+  services: "biz.services",
+  formation: "biz.formation",
+  autre: "biz.autre",
+};
+
+export const MODE_KEYS: Record<LiveMode, MessageKey> = {
+  presentiel: "mode.presentiel",
+  distance: "mode.distance",
+};
+
+/** Labels FR/EN pour posters, mails équipe, admin. */
 export const BUSINESS_TYPES: { id: BusinessType; label: Bi }[] = [
   { id: "mode", label: { fr: "Mode, couture, accessoires", en: "Fashion, tailoring, accessories" } },
   { id: "beaute", label: { fr: "Beauté, cosmétiques, coiffure", en: "Beauty, cosmetics, hair" } },
@@ -24,4 +44,12 @@ export function isBusinessType(value: string): value is BusinessType {
 
 export function businessLabel(id: BusinessType): Bi {
   return BUSINESS_TYPES.find((item) => item.id === id)?.label ?? { fr: id, en: id };
+}
+
+export function bizKey(id: BusinessType): MessageKey {
+  return BIZ_KEYS[id] ?? "biz.autre";
+}
+
+export function modeKey(id: LiveMode): MessageKey {
+  return MODE_KEYS[id];
 }

@@ -175,11 +175,19 @@ async function db<T = Row>(query: string, init: RequestInit = {}, table = "reser
     },
   });
   if (res.status === 409) throw new SlotTakenError();
+  const body = await res.text();
   if (!res.ok) {
-    console.error("Supabase", res.status, await res.text());
+    console.error("Supabase", res.status, body);
+    if (res.status === 403 || body.includes("42501") || body.includes("permission denied")) {
+      throw new Error(
+        "Supabase refuse l'accès aux tables. Dans SQL Editor, exécute le fichier supabase/fix-grants.sql puis réessaie.",
+      );
+    }
     throw new Error("La base de données ne répond pas. Réessaie dans un instant.");
   }
-  return res.status === 204 ? [] : ((await res.json()) as T[]);
+  // PostgREST : 204, ou 201 avec corps vide si Prefer: return=minimal.
+  if (res.status === 204 || !body.trim()) return [];
+  return JSON.parse(body) as T[];
 }
 
 type SlotRow = { date: string; slot_start: string; reservation_id: string };

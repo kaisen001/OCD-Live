@@ -63,11 +63,7 @@ textarea {
   outline-offset: 3px;
 }
 
-/* ---------- Deux langues ---------- */
-html[data-lang="fr"] .l-en,
-html[data-lang="en"] .l-fr {
-  display: none;
-}
+/* i18n : contenu via dictionnaires (plus de bascule CSS .l-fr / .l-en). */
 
 /* ---------- Mise en page ---------- */
 .shell {
@@ -170,15 +166,110 @@ html[data-lang="en"] .l-fr {
   }
 }
 
-/* ---------- Motif ---------- */
+/* ---------- Motifs culture africaine (visibles) ---------- */
+.band,
+.band-header,
+.band-section,
+.band-tall {
+  background-color: #fff;
+  background-image: url("/brand/motif-rail.png");
+  background-repeat: repeat-x;
+  background-position: center;
+}
+
+.band-header {
+  height: 10px;
+  background-size: auto 10px;
+}
+
+.band-section {
+  height: 40px;
+  background-size: auto 40px;
+}
+
 .band {
-  height: 14px;
-  background: var(--ink) url("/motif.svg") repeat-x left center / auto 14px;
+  height: 36px;
+  background-size: auto 36px;
 }
 
 .band-tall {
-  height: 20px;
-  background-size: auto 20px;
+  height: 48px;
+  background-size: auto 48px;
+}
+
+/* Colonnes latérales : motif géométrique bien lisible. */
+.motif-rail {
+  display: block;
+  width: 28px;
+  flex-shrink: 0;
+  align-self: stretch;
+  min-height: 12rem;
+  background: #fff url("/brand/motif-rail.png") repeat-y center top / 100% auto;
+}
+
+@media (min-width: 640px) {
+  .motif-rail {
+    width: 36px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .motif-rail {
+    width: 44px;
+  }
+}
+
+/* Section avec le coucher de soleil en fond. */
+.savanna {
+  position: relative;
+  isolation: isolate;
+  color: #fff;
+  background: #050505;
+  overflow: hidden;
+}
+
+.savanna::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background: #050505 url("/brand/afrique-coucher.png") center / cover no-repeat;
+}
+
+.savanna::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(105deg, rgba(5, 5, 5, 0.82) 0%, rgba(5, 5, 5, 0.55) 48%, rgba(5, 5, 5, 0.72) 100%),
+    linear-gradient(180deg, rgba(5, 5, 5, 0.35) 0%, transparent 28%, rgba(5, 5, 5, 0.55) 100%);
+}
+
+.savanna .step-num {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  border: 1.5px solid rgba(255, 183, 61, 0.85);
+}
+
+.savanna .kicker {
+  color: var(--glow);
+}
+
+.frame-wax {
+  position: relative;
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 0 0 2px var(--ink), 0 0 0 5px var(--glow);
+}
+
+.frame-wax::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 14px;
+  background: #050505 url("/brand/motif-africain.png") repeat-x center / auto 14px;
+  pointer-events: none;
 }
 
 /* ---------- Boutons ---------- */
@@ -518,7 +609,7 @@ html[data-lang="en"] .l-fr {
   bottom: 0;
   z-index: 40;
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   align-items: center;
   padding: 0.4rem 1rem calc(0.4rem + env(safe-area-inset-bottom));
   background: var(--white);
@@ -537,23 +628,6 @@ html[data-lang="en"] .l-fr {
 
 .tabbar a[aria-current="page"] {
   color: var(--ink);
-}
-
-/* Le bouton « + » de TikTok : blanc, bordé de cyan et de rouge. */
-.tab-plus {
-  display: grid;
-  width: 3.4rem;
-  height: 2.3rem;
-  place-items: center;
-  border-radius: 10px;
-  background: var(--ink);
-  color: #fff;
-  font-size: 1.5rem;
-  font-weight: 800;
-  line-height: 1;
-  box-shadow:
-    -0.3rem 0 0 var(--cyan),
-    0.3rem 0 0 var(--live);
 }
 
 @media (min-width: 768px) {

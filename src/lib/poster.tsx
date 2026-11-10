@@ -19,7 +19,8 @@ type Assets = { display: Buffer; text: Buffer; motif: string; logo: string; afri
 let assets: Promise<Assets> | null = null;
 
 function loadAssets() {
-  const file = (path: string) => readFile(join(process.cwd(), path));
+  const root = join(/* turbopackIgnore: true */ process.cwd());
+  const file = (path: string) => readFile(join(root, path));
   const png = (data: Buffer) => `data:image/png;base64,${data.toString("base64")}`;
   assets ??= Promise.all([
     file("src/fonts/tiktok-sans-800.woff"),

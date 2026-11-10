@@ -28,9 +28,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message, slotTaken: true }, { status: 409 });
     }
     console.error("Réservation en échec", error);
-    return NextResponse.json(
-      { error: "La réservation n'a pas pu être enregistrée. Réessaie dans un instant." },
-      { status: 500 },
-    );
+    const message =
+      error instanceof Error && error.message
+        ? error.message
+        : "La réservation n'a pas pu être enregistrée. Réessaie dans un instant.";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

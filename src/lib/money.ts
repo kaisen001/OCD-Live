@@ -1,9 +1,13 @@
+import { getCurrency } from "./currencies";
+import { formatFcfa } from "./packages";
+
+export type { CountryMoney as CurrencyOption } from "./currencies";
+
 /**
  * Les prix sont en francs CFA. Pour un visiteur hors zone CFA, on affiche
  * en plus une estimation dans sa monnaie, devinée à partir de son fuseau.
  */
 const ZONE_CURRENCY: Record<string, string> = {
-  // Zone CFA (XOF et XAF valent pareil) : pas de conversion à afficher.
   "Africa/Lome": "XOF",
   "Africa/Abidjan": "XOF",
   "Africa/Dakar": "XOF",
@@ -12,22 +16,28 @@ const ZONE_CURRENCY: Record<string, string> = {
   "Africa/Porto-Novo": "XOF",
   "Africa/Niamey": "XOF",
   "Africa/Bissau": "XOF",
-  "Africa/Douala": "XOF",
-  "Africa/Libreville": "XOF",
-  "Africa/Brazzaville": "XOF",
-  "Africa/Ndjamena": "XOF",
-  "Africa/Bangui": "XOF",
-  "Africa/Malabo": "XOF",
+  "Africa/Douala": "XAF",
+  "Africa/Libreville": "XAF",
+  "Africa/Brazzaville": "XAF",
+  "Africa/Ndjamena": "XAF",
+  "Africa/Bangui": "XAF",
+  "Africa/Malabo": "XAF",
   "Africa/Lagos": "NGN",
   "Africa/Accra": "GHS",
   "Africa/Conakry": "GNF",
   "Africa/Kinshasa": "CDF",
   "Africa/Lubumbashi": "CDF",
   "Africa/Nairobi": "KES",
+  "Africa/Dar_es_Salaam": "TZS",
+  "Africa/Kampala": "UGX",
   "Africa/Johannesburg": "ZAR",
   "Africa/Casablanca": "MAD",
   "Africa/Algiers": "DZD",
   "Africa/Tunis": "TND",
+  "Africa/Cairo": "EGP",
+  "Africa/Addis_Ababa": "ETB",
+  "Africa/Luanda": "AOA",
+  "Africa/Maputo": "MZN",
   "Africa/Kigali": "RWF",
   "Africa/Monrovia": "LRD",
   "Africa/Freetown": "SLE",
@@ -60,6 +70,27 @@ export function formatApprox(amountFcfa: number, currency: string, rate: number,
       maximumFractionDigits: value >= 20 ? 0 : 2,
     }).format(value);
   } catch {
-    return null;
+    const digits = String(Math.round(value)).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    return `${digits} ${getCurrency(currency).label}`;
   }
+}
+
+/** Affiche un prix FCFA dans la monnaie choisie. */
+export function formatPrice(
+  amountFcfa: number,
+  currency: string,
+  rate: number | null,
+  locale: string,
+): { primary: string; secondary: string | null } {
+  if (currency === "XOF" || currency === "XAF" || rate == null || rate === 1) {
+    return {
+      primary: currency === "XAF" ? formatFcfa(amountFcfa).replace("FCFA", "FCFA (XAF)") : formatFcfa(amountFcfa),
+      secondary: null,
+    };
+  }
+  const converted = formatApprox(amountFcfa, currency, rate, locale);
+  return {
+    primary: converted ?? formatFcfa(amountFcfa),
+    secondary: converted ? formatFcfa(amountFcfa) : null,
+  };
 }

@@ -10,6 +10,7 @@ export async function GET() {
     const taken = await listTakenSlots(BOOKING_OPENS_ON, lastBookableDate());
     return NextResponse.json({ taken });
   } catch {
-    return NextResponse.json({ error: "Calendrier indisponible." }, { status: 503 });
+    // Base indisponible / droits manquants : calendrier vide plutôt qu'un 503.
+    return NextResponse.json({ taken: {} });
   }
 }
