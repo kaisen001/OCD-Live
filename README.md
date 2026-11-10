@@ -39,7 +39,7 @@ Copier `.env.example` vers `.env.local` et remplir.
 
 - **Espace équipe** : `ADMIN_PASSWORD` et `ADMIN_SECRET`. En ligne, sans mot de passe défini, personne ne peut entrer.
 - **Base de données** : `SUPABASE_URL` et `SUPABASE_SERVICE_ROLE_KEY`. Coller une fois `supabase/schema.sql` dans l'éditeur SQL de Supabase. Sans ces deux valeurs, les réservations vont dans `data/reservations.json` : bien pour tester, pas pour la mise en ligne.
-- **Notification de l'équipe** : `RESEND_API_KEY` et `TEAM_EMAIL` pour l'e-mail, ou `TEAM_WEBHOOK_URL`. Sans réglage, le message s'écrit dans le journal du serveur.
+- **Notification de l'équipe** : `BREVO_API_KEY`, `TEAM_EMAIL` et `BREVO_SENDER_EMAIL` pour l'e-mail (Brevo), ou `TEAM_WEBHOOK_URL`. Sans réglage, le message s'écrit dans le journal du serveur.
 - **WhatsApp officiel** : `NEXT_PUBLIC_TEAM_WHATSAPP`.
 
 ## Ce qui se change dans un seul fichier

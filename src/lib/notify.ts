@@ -7,7 +7,7 @@ function escapeHtml(value: string) {
 
 /**
  * Prévient l'équipe d'une nouvelle réservation.
- * - E-mail si RESEND_API_KEY et TEAM_EMAIL sont définis.
+ * - E-mail par Brevo si BREVO_API_KEY, TEAM_EMAIL et BREVO_SENDER_EMAIL sont définis.
  * - Webhook (Slack, Discord, Make…) si TEAM_WEBHOOK_URL est défini.
  * - Sinon : journal du serveur.
  * Une notification qui échoue ne bloque jamais la réservation.
@@ -17,30 +17,37 @@ export async function notifyTeam(reservation: Reservation) {
   const textBody = lines.join("\n");
   let delivered = false;
 
-  const apiKey = process.env.RESEND_API_KEY;
+  const apiKey = process.env.BREVO_API_KEY;
   const to = process.env.TEAM_EMAIL;
-  if (apiKey && to) {
+  // L'expéditeur doit être une adresse validée dans Brevo (Expéditeurs et domaines).
+  const sender = process.env.BREVO_SENDER_EMAIL || to?.split(",")[0]?.trim();
+  if (apiKey && to && sender) {
     try {
-      const res = await fetch("https://api.resend.com/emails", {
+      const res = await fetch("https://api.brevo.com/v3/smtp/email", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${apiKey}`,
+          "api-key": apiKey,
           "Content-Type": "application/json",
+          Accept: "application/json",
         },
         body: JSON.stringify({
-          from: process.env.TEAM_EMAIL_FROM || "OCD Live <onboarding@resend.dev>",
-          to: to.split(",").map((item) => item.trim()).filter(Boolean),
+          sender: { name: "OCD Live", email: sender },
+          to: to
+            .split(",")
+            .map((item) => item.trim())
+            .filter(Boolean)
+            .map((email) => ({ email })),
           subject,
-          text: textBody,
-          html: `<div style="font-family:system-ui,sans-serif;font-size:16px;line-height:1.5">${lines
+          textContent: textBody,
+          htmlContent: `<div style="font-family:system-ui,sans-serif;font-size:16px;line-height:1.5">${lines
             .map((line) => (line ? `<p style="margin:0 0 6px">${escapeHtml(line)}</p>` : "<br>"))
             .join("")}</div>`,
         }),
       });
       if (res.ok) delivered = true;
-      else console.error("E-mail équipe refusé", res.status, await res.text());
+      else console.error("E-mail Brevo refusé", res.status, await res.text());
     } catch (error) {
-      console.error("E-mail équipe en échec", error);
+      console.error("E-mail Brevo en échec", error);
     }
   }
 
