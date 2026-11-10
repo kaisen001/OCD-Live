@@ -108,6 +108,7 @@ export const en: Messages = {
   "story.placeholder":
     "Bovann's story will go here, told by him, with his photos. We don't write it for him.",
 
+  "footer.tagline": "Opportunities Are Outside",
   "footer.blurb": "Sales lives on the House of Challenge TikTok. Studio in {city}, {country}.",
 
   "book.step1": "Where do you want to go live?",

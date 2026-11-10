@@ -116,6 +116,7 @@ export const fr = {
     "Ici viendra l'histoire de Bovann, racontée par lui, avec ses photos. On ne l'écrit pas à sa place.",
 
   // Footer
+  "footer.tagline": "Les Opportunités C'est Dehors",
   "footer.blurb":
     "Lives de vente sur le TikTok House of Challenge. Studio à {city}, {country}.",
 

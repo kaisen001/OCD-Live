@@ -92,6 +92,7 @@ export const sw: Messages = {
   "story.quote": "« Ukiwa na wafuasi 10, una wateja 10. »",
   "story.quoteBy": "Bovann, kulingana na Laura Dave Media, 6 Novemba 2026.",
   "story.placeholder": "Hapa kutakuja hadithi ya Bovann, iliyosimuliwa naye, na picha zake.",
+  "footer.tagline": "Opportunities Are Outside",
   "footer.blurb": "Live za mauzo kwenye TikTok House of Challenge. Studio {city}, {country}.",
   "book.step1": "Unataka kufanya live wapi?",
   "book.step2": "Siku gani, saa ngapi?",

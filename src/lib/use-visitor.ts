@@ -48,6 +48,7 @@ export function setLocale(localeId: string) {
   try {
     localStorage.setItem(LOCALE_KEY, locale.id);
     localStorage.setItem("ocd-lang", locale.ui);
+    document.cookie = `${LOCALE_KEY}=${encodeURIComponent(locale.id)};path=/;max-age=31536000;samesite=lax`;
   } catch {
     /* ignore */
   }

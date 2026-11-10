@@ -92,6 +92,7 @@ export const ar: Messages = {
   "story.quote": "« إن كان لديك 10 متابعين، فلديك 10 زبائن. »",
   "story.quoteBy": "Bovann، حسب Laura Dave Media، 6 نوفمبر 2026.",
   "story.placeholder": "هنا ستأتي قصة Bovann، يرويها بنفسه، مع صوره.",
+  "footer.tagline": "Les Opportunités C'est Dehors",
   "footer.blurb": "بثوث بيع على تيك توك House of Challenge. الاستوديو في {city}، {country}.",
   "book.step1": "أين تريد أن تبث؟",
   "book.step2": "أي يوم، في أي ساعة؟",

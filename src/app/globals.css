@@ -197,6 +197,24 @@ textarea {
   background-size: auto 48px;
 }
 
+/* Bannière tribale fine en bas de page (répétée horizontalement). */
+.footer-banner {
+  width: 100%;
+  height: 22px;
+  margin-top: 0.5rem;
+  background-color: #000;
+  background-image: url("/brand/banniere-tribale.jpg");
+  background-repeat: repeat-x;
+  background-position: center;
+  background-size: auto 100%;
+}
+
+@media (min-width: 768px) {
+  .footer-banner {
+    height: 28px;
+  }
+}
+
 /* Colonnes latérales : motif géométrique bien lisible. */
 .motif-rail {
   display: block;

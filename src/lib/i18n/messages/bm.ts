@@ -92,6 +92,7 @@ export const bm: Messages = {
   "story.quote": "« Si tu as 10 abonnés, tu as 10 clients. »",
   "story.quoteBy": "Bovann, propos rapportés par Laura Dave Media, 6 novembre 2026.",
   "story.placeholder": "Ici viendra l'histoire de Bovann, racontée par lui, avec ses photos. On ne l'écrit pas à sa place.",
+  "footer.tagline": "Les Opportunités C'est Dehors",
   "footer.blurb": "Lives de vente sur le TikTok House of Challenge. Studio à {city}, {country}.",
   "book.step1": "Où veux-tu faire ton live ?",
   "book.step2": "Quel jour, à quelle heure ?",
